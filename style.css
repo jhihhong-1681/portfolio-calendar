@@ -128,7 +128,7 @@ body {
 }
 
 .cell {
-  aspect-ratio: 1 / 0.85;
+  aspect-ratio: 1 / 1.05;
   border-radius: 8px;
   padding: 8px 8px;
   display: flex;
@@ -164,9 +164,22 @@ body {
   overflow: hidden;
 }
 
+.cell .day-total {
+  font-size: 9.5px;
+  text-align: right;
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 3px;
+  margin-top: 2px;
+}
+
 .cell.no-data .amount,
-.cell.no-data .pct {
+.cell.no-data .pct,
+.cell.no-data .day-total {
   color: #4a4f58;
+  border-top-color: rgba(255,255,255,0.06);
 }
 
 /* 綠 = 賺錢(正), 紅 = 賠錢(負) */

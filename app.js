@@ -117,6 +117,8 @@ function render() {
     amountEl.className = "amount";
     const pctEl = document.createElement("div");
     pctEl.className = "pct";
+    const totalEl = document.createElement("div");
+    totalEl.className = "day-total";
 
     if (info && info.delta !== null) {
       hasAnyData = true;
@@ -126,16 +128,19 @@ function render() {
       }
       amountEl.textContent = fmtAmountShort(info.delta);
       pctEl.textContent = fmtPct(info.pct);
+      totalEl.textContent = Math.round(info.total).toLocaleString("en-US");
       const cls = levelClass(info.pct);
       if (cls) cell.classList.add(cls);
     } else {
       cell.classList.add("no-data");
       amountEl.textContent = info ? "首筆" : "";
       pctEl.textContent = "";
+      totalEl.textContent = info ? Math.round(info.total).toLocaleString("en-US") : "";
     }
 
     cell.appendChild(amountEl);
     cell.appendChild(pctEl);
+    cell.appendChild(totalEl);
     gridEl.appendChild(cell);
   }
 
@@ -333,6 +338,7 @@ function renderHoldings() {
     <div class="metric">
       <div class="metric-label">現金</div>
       <div class="metric-value">${fmtAmount(t.cash).replace(/^[+-]/, "")}</div>
+      <div class="metric-sub flat">水位 ${t.totalAssets ? ((t.cash / t.totalAssets) * 100).toFixed(1) : "0.0"}%</div>
     </div>
     <div class="metric wide">
       <div class="metric-label">總資產（含現金/期貨/加密貨幣）</div>
