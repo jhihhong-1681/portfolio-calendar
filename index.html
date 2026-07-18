@@ -7,43 +7,59 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="card">
-    <div class="title-row">
-      <span class="title-icon">📅</span>
-      <span class="title-text">報酬日曆</span>
-    </div>
-
-    <div class="month-row">
-      <button id="prevBtn" class="nav-btn">‹</button>
-      <div class="month-label" id="monthLabel">2026/07 報酬</div>
-      <button id="nextBtn" class="nav-btn">›</button>
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-block">
-        <div class="summary-label">報酬率</div>
-        <div class="summary-pct" id="monthPct">--%</div>
+  <div class="page">
+    <div class="card calendar-card">
+      <div class="title-row">
+        <span class="title-icon">📅</span>
+        <span class="title-text">報酬日曆</span>
       </div>
-      <div class="summary-amount" id="monthAmount">NT$0</div>
+
+      <div class="month-row">
+        <button id="prevBtn" class="nav-btn">‹</button>
+        <div class="month-label" id="monthLabel">2026/07 報酬</div>
+        <button id="nextBtn" class="nav-btn">›</button>
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-block">
+          <div class="summary-label">報酬率</div>
+          <div class="summary-pct" id="monthPct">--%</div>
+        </div>
+        <div class="summary-amount" id="monthAmount">NT$0</div>
+      </div>
+
+      <div class="weekday-row">
+        <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="compare-section">
+        <div class="compare-title">大盤比較（本月累積報酬%）</div>
+        <div id="compareChart"></div>
+        <div class="compare-legend" id="compareLegend"></div>
+      </div>
+
+      <div class="footer" id="footer"></div>
     </div>
 
-    <div class="weekday-row">
-      <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+    <div class="card holdings-card">
+      <div class="title-row">
+        <span class="title-icon">📊</span>
+        <span class="title-text">目前持股</span>
+      </div>
+
+      <div class="holdings-summary" id="holdingsSummary"></div>
+
+      <div class="holdings-list" id="holdingsList"></div>
+
+      <div class="footer" id="holdingsFooter"></div>
     </div>
-
-    <div class="grid" id="grid"></div>
-
-    <div class="compare-section">
-      <div class="compare-title">大盤比較（本月累積報酬%）</div>
-      <div id="compareChart"></div>
-      <div class="compare-legend" id="compareLegend"></div>
-    </div>
-
-    <div class="footer" id="footer"></div>
   </div>
 
   <script src="data.js"></script>
   <script src="indices.js"></script>
+  <script src="holdings.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

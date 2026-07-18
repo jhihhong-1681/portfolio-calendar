@@ -246,6 +246,86 @@ function renderCompareChart(year, month) {
     .join("");
 }
 
+const holdingsSummaryEl = document.getElementById("holdingsSummary");
+const holdingsListEl = document.getElementById("holdingsList");
+const holdingsFooterEl = document.getElementById("holdingsFooter");
+
+function fmtUsd(n) {
+  if (n === null || n === undefined) return "-";
+  return "$" + Number(n).toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+}
+
+function renderHoldings() {
+  const h = window.HOLDINGS;
+  if (!h) {
+    holdingsSummaryEl.innerHTML = "";
+    holdingsListEl.innerHTML = '<div class="flat" style="font-size:12px;">尚無持股資料</div>';
+    holdingsFooterEl.textContent = "";
+    return;
+  }
+
+  const t = h.totals || {};
+  const unrealizedCls = t.unrealizedPL > 0 ? "gain" : t.unrealizedPL < 0 ? "loss" : "flat";
+  const realizedCls = t.realizedPL > 0 ? "gain" : t.realizedPL < 0 ? "loss" : "flat";
+
+  holdingsSummaryEl.innerHTML = `
+    <div class="metric">
+      <div class="metric-label">總投入</div>
+      <div class="metric-value">${fmtAmount(t.invested).replace(/^[+-]/, "")}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">現值</div>
+      <div class="metric-value">${fmtAmount(t.value).replace(/^[+-]/, "")}</div>
+    </div>
+    <div class="metric wide">
+      <div class="metric-label">總資產（含現金/期貨/加密貨幣）</div>
+      <div class="metric-value">${fmtAmount(t.totalAssets).replace(/^[+-]/, "")}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">未實現損益</div>
+      <div class="metric-value ${unrealizedCls}">${fmtAmount(t.unrealizedPL)}</div>
+      <div class="metric-sub ${unrealizedCls}">${fmtPct(t.unrealizedPct)}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">已實現損益</div>
+      <div class="metric-value ${realizedCls}">${fmtAmount(t.realizedPL)}</div>
+    </div>
+  `;
+
+  const positions = h.positions || [];
+  holdingsListEl.innerHTML = positions
+    .map((p) => {
+      const borderCls = p.pl > 0 ? "gain-border" : p.pl < 0 ? "loss-border" : "";
+      const plCls = p.pl > 0 ? "gain" : p.pl < 0 ? "loss" : "flat";
+      const sharesTxt = p.shares !== null && p.shares !== undefined ? `${p.shares} 股` : "";
+      const costLine = p.avgCost !== null && p.avgCost !== undefined
+        ? `成本 ${fmtUsd(p.avgCost)} → 現價 ${fmtUsd(p.price)}`
+        : "";
+      const investLine = `投入 ${fmtAmount(p.invested).replace(/^[+-]/, "")} → 現值 ${fmtAmount(p.value).replace(/^[+-]/, "")}`;
+      const realizedLine = p.realized !== null && p.realized !== undefined
+        ? `<div class="h-line3">已實現：<span class="${p.realized > 0 ? "gain" : p.realized < 0 ? "loss" : "flat"}">${fmtAmount(p.realized)}</span></div>`
+        : "";
+      return `
+        <div class="holding-row ${borderCls}">
+          <div class="h-line1">
+            <span><span class="h-symbol">${p.symbol}</span><span class="h-shares">${sharesTxt}</span></span>
+            <span class="h-pl ${plCls}">${fmtAmount(p.pl)} <span style="font-size:10.5px;">(${fmtPct(p.pct)})</span></span>
+          </div>
+          <div class="h-line2">
+            <span>${costLine}</span>
+            <span>${investLine}</span>
+          </div>
+          ${realizedLine}
+        </div>
+      `;
+    })
+    .join("");
+
+  holdingsFooterEl.textContent = `快照時間：${h.asOf}`;
+}
+
+renderHoldings();
+
 document.getElementById("prevBtn").addEventListener("click", () => {
   viewMonth -= 1;
   if (viewMonth < 1) {
