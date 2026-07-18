@@ -4,17 +4,20 @@ const rawHistory = [...(window.PORTFOLIO_HISTORY || [])].sort((a, b) =>
   a.date < b.date ? -1 : a.date > b.date ? 1 : 0
 );
 
-// dateStr(YYYY-MM-DD) -> { total, delta, pct }
+// dateStr(YYYY-MM-DD) -> { total, delta, pct, basisChange }
+// basis 不同代表統計口徑換了（例如從「只算美股」換成「總資產」），
+// 這種交界不能拿來算漲跌，跟資料的第一天一樣當作沒有前一天可比較。
 const dailyMap = new Map();
 for (let i = 0; i < rawHistory.length; i++) {
-  const { date, total } = rawHistory[i];
-  if (i === 0) {
-    dailyMap.set(date, { total, delta: null, pct: null });
+  const { date, total, basis } = rawHistory[i];
+  const prev = i > 0 ? rawHistory[i - 1] : null;
+  if (!prev || (prev.basis && basis && prev.basis !== basis)) {
+    dailyMap.set(date, { total, delta: null, pct: null, basisChange: !!prev });
   } else {
-    const prevTotal = rawHistory[i - 1].total;
+    const prevTotal = prev.total;
     const delta = total - prevTotal;
     const pct = prevTotal !== 0 ? (delta / prevTotal) * 100 : null;
-    dailyMap.set(date, { total, delta, pct });
+    dailyMap.set(date, { total, delta, pct, basisChange: false });
   }
 }
 
@@ -133,7 +136,7 @@ function render() {
       if (cls) cell.classList.add(cls);
     } else {
       cell.classList.add("no-data");
-      amountEl.textContent = info ? "首筆" : "";
+      amountEl.textContent = info ? (info.basisChange ? "基準變更" : "首筆") : "";
       pctEl.textContent = "";
       totalEl.textContent = info ? Math.round(info.total).toLocaleString("en-US") : "";
     }
@@ -202,9 +205,23 @@ function renderAssetChart() {
   const trendCls = lastValue >= firstValue ? "gain" : "loss";
   const trendColor = lastValue >= firstValue ? "#ff5c5c" : "#2fbf6a"; // 台股慣例：漲=紅, 跌=綠
 
+  // 找出統計口徑改變的那一天（例如從「只算美股」換成「總資產」），畫一條虛線標記，
+  // 提醒這條線左右兩段的數字基準不一樣，不是真的跳漲/跳跌。
+  let basisChangeIndex = -1;
+  for (let i = 1; i < rawHistory.length; i++) {
+    if (rawHistory[i].basis && rawHistory[i - 1].basis && rawHistory[i].basis !== rawHistory[i - 1].basis) {
+      basisChangeIndex = i;
+      break;
+    }
+  }
+
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
   svg += `<polygon points="${areaPoints}" fill="${trendColor}" fill-opacity="0.12" />`;
   svg += `<polyline points="${points}" fill="none" stroke="${trendColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />`;
+  if (basisChangeIndex >= 0) {
+    const bx = xFor(basisChangeIndex).toFixed(1);
+    svg += `<line x1="${bx}" y1="${padT}" x2="${bx}" y2="${height - padBottom}" stroke="#9aa0a8" stroke-width="1" stroke-dasharray="3,3" />`;
+  }
   svg += `<circle cx="${xFor(n - 1).toFixed(1)}" cy="${yFor(lastValue).toFixed(1)}" r="3.5" fill="${trendColor}" />`;
   svg += `</svg>`;
 
@@ -216,6 +233,9 @@ function renderAssetChart() {
       <div class="legend-item">目前 <span class="legend-value ${trendCls}">${fmtAmount(lastValue).replace(/^[+-]/, "")}</span></div>
     </div>
   `;
+  if (basisChangeIndex >= 0) {
+    assetChartEl.innerHTML += `<div class="footer" style="margin-top:6px;">虛線左側是用交易紀錄推算的美股部位（不含台幣現金/期貨/加密貨幣），右側才是完整總資產</div>`;
+  }
 }
 
 const compareChartEl = document.getElementById("compareChart");
