@@ -200,7 +200,7 @@ function renderAssetChart() {
   const lastValue = values[n - 1];
   const firstValue = values[0];
   const trendCls = lastValue >= firstValue ? "gain" : "loss";
-  const trendColor = lastValue >= firstValue ? "#2fbf6a" : "#ff5c5c";
+  const trendColor = lastValue >= firstValue ? "#ff5c5c" : "#2fbf6a"; // 台股慣例：漲=紅, 跌=綠
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
   svg += `<polygon points="${areaPoints}" fill="${trendColor}" fill-opacity="0.12" />`;

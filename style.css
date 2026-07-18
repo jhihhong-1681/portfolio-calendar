@@ -108,8 +108,8 @@ body {
   font-weight: 700;
 }
 
-.gain { color: #2fbf6a; }
-.loss { color: #ff5c5c; }
+.gain { color: #ff5c5c; }
+.loss { color: #2fbf6a; }
 .flat { color: #9aa0a8; }
 
 .weekday-row {
@@ -182,16 +182,16 @@ body {
   border-top-color: rgba(255,255,255,0.06);
 }
 
-/* 綠 = 賺錢(正), 紅 = 賠錢(負) */
-.lvl-gain-1 { background: #123320; color: #b6f0cf; }
-.lvl-gain-2 { background: #0f4a2c; color: #cdf7e2; }
-.lvl-gain-3 { background: #0b6b3a; color: #e3fff0; }
-.lvl-gain-4 { background: #068a45; color: #ffffff; }
+/* 台股慣例：紅 = 賺錢(正), 綠 = 賠錢(負) */
+.lvl-gain-1 { background: #3a1414; color: #ffb3b3; }
+.lvl-gain-2 { background: #5c1717; color: #ffcccc; }
+.lvl-gain-3 { background: #8a1414; color: #ffe0e0; }
+.lvl-gain-4 { background: #b31212; color: #ffffff; }
 
-.lvl-loss-1 { background: #3a1414; color: #ffb3b3; }
-.lvl-loss-2 { background: #5c1717; color: #ffcccc; }
-.lvl-loss-3 { background: #8a1414; color: #ffe0e0; }
-.lvl-loss-4 { background: #b31212; color: #ffffff; }
+.lvl-loss-1 { background: #123320; color: #b6f0cf; }
+.lvl-loss-2 { background: #0f4a2c; color: #cdf7e2; }
+.lvl-loss-3 { background: #0b6b3a; color: #e3fff0; }
+.lvl-loss-4 { background: #068a45; color: #ffffff; }
 
 .asset-section {
   margin-top: 24px;
@@ -307,8 +307,8 @@ body {
   border-left: 3px solid #3a3f4a;
 }
 
-.holding-row.gain-border { border-left-color: #2fbf6a; }
-.holding-row.loss-border { border-left-color: #ff5c5c; }
+.holding-row.gain-border { border-left-color: #ff5c5c; }
+.holding-row.loss-border { border-left-color: #2fbf6a; }
 
 .holding-row .h-line1 {
   display: flex;
