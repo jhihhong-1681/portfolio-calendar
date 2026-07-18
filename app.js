@@ -158,6 +158,59 @@ function render() {
     : "尚無任何紀錄";
 
   renderCompareChart(viewYear, viewMonth);
+  renderAssetChart();
+}
+
+const assetChartEl = document.getElementById("assetChart");
+
+// 總資產走勢：畫出 rawHistory 裡「全部」快照日期的總資產金額折線圖（不分月份，看長期走勢）
+function renderAssetChart() {
+  if (rawHistory.length < 2) {
+    assetChartEl.innerHTML = '<div class="flat" style="font-size:12px;padding:10px 0;">累積兩天以上的資料才能畫出走勢</div>';
+    return;
+  }
+
+  const width = 380;
+  const height = 130;
+  const padL = 4;
+  const padR = 4;
+  const padT = 10;
+  const padBottom = 10;
+
+  const values = rawHistory.map((r) => r.total);
+  let min = Math.min(...values);
+  let max = Math.max(...values);
+  if (min === max) {
+    min -= 1;
+    max += 1;
+  }
+
+  const n = values.length;
+  const xFor = (i) => (n === 1 ? padL : padL + (i / (n - 1)) * (width - padL - padR));
+  const yFor = (v) => padT + (1 - (v - min) / (max - min)) * (height - padT - padBottom);
+
+  const points = values.map((v, i) => `${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(" ");
+  const areaPoints = `${xFor(0).toFixed(1)},${(height - padBottom).toFixed(1)} ${points} ${xFor(n - 1).toFixed(1)},${(height - padBottom).toFixed(1)}`;
+
+  const lastValue = values[n - 1];
+  const firstValue = values[0];
+  const trendCls = lastValue >= firstValue ? "gain" : "loss";
+  const trendColor = lastValue >= firstValue ? "#2fbf6a" : "#ff5c5c";
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<polygon points="${areaPoints}" fill="${trendColor}" fill-opacity="0.12" />`;
+  svg += `<polyline points="${points}" fill="none" stroke="${trendColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />`;
+  svg += `<circle cx="${xFor(n - 1).toFixed(1)}" cy="${yFor(lastValue).toFixed(1)}" r="3.5" fill="${trendColor}" />`;
+  svg += `</svg>`;
+
+  assetChartEl.innerHTML = svg;
+  assetChartEl.innerHTML += `
+    <div class="compare-legend">
+      <div class="legend-item">期間最高 <span class="legend-value">${fmtAmount(max).replace(/^[+-]/, "")}</span></div>
+      <div class="legend-item">期間最低 <span class="legend-value">${fmtAmount(min).replace(/^[+-]/, "")}</span></div>
+      <div class="legend-item">目前 <span class="legend-value ${trendCls}">${fmtAmount(lastValue).replace(/^[+-]/, "")}</span></div>
+    </div>
+  `;
 }
 
 const compareChartEl = document.getElementById("compareChart");
@@ -277,6 +330,10 @@ function renderHoldings() {
       <div class="metric-label">現值</div>
       <div class="metric-value">${fmtAmount(t.value).replace(/^[+-]/, "")}</div>
     </div>
+    <div class="metric">
+      <div class="metric-label">現金</div>
+      <div class="metric-value">${fmtAmount(t.cash).replace(/^[+-]/, "")}</div>
+    </div>
     <div class="metric wide">
       <div class="metric-label">總資產（含現金/期貨/加密貨幣）</div>
       <div class="metric-value">${fmtAmount(t.totalAssets).replace(/^[+-]/, "")}</div>
@@ -297,7 +354,10 @@ function renderHoldings() {
     .map((p) => {
       const borderCls = p.pl > 0 ? "gain-border" : p.pl < 0 ? "loss-border" : "";
       const plCls = p.pl > 0 ? "gain" : p.pl < 0 ? "loss" : "flat";
+      const isOption = p.type === "option";
       const sharesTxt = p.shares !== null && p.shares !== undefined ? `${p.shares} 股` : "";
+      const optionTag = isOption ? '<span class="h-tag">期權</span>' : "";
+      const nameTxt = p.name && p.name !== p.symbol ? `<div class="h-name">${p.name}</div>` : "";
       const costLine = p.avgCost !== null && p.avgCost !== undefined
         ? `成本 ${fmtUsd(p.avgCost)} → 現價 ${fmtUsd(p.price)}`
         : "";
@@ -308,9 +368,10 @@ function renderHoldings() {
       return `
         <div class="holding-row ${borderCls}">
           <div class="h-line1">
-            <span><span class="h-symbol">${p.symbol}</span><span class="h-shares">${sharesTxt}</span></span>
+            <span><span class="h-symbol">${p.symbol}</span><span class="h-shares">${sharesTxt}</span>${optionTag}</span>
             <span class="h-pl ${plCls}">${fmtAmount(p.pl)} <span style="font-size:10.5px;">(${fmtPct(p.pct)})</span></span>
           </div>
+          ${nameTxt}
           <div class="h-line2">
             <span>${costLine}</span>
             <span>${investLine}</span>

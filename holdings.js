@@ -21,7 +21,7 @@ window.HOLDINGS = {
     { symbol: "MSFL", name: "2x Long MicroSoft", shares: 150, avgCost: 16.1, price: 16.3, invested: 75020, value: 75656, pl: 635.50, pct: 0.85, realized: 4980.67 },
     { symbol: "NU", name: "Nu Holdings", shares: 150, avgCost: 12.4, price: 13.6, invested: 57714, value: 63194, pl: 5479.25, pct: 9.49, realized: null },
     { symbol: "RKLB", name: "Rocket Lab Corporation", shares: 15, avgCost: 102.7, price: 67.6, invested: 47740, value: 31443, pl: -16296.70, pct: -34.14, realized: 28585.10 },
-    { symbol: "XOM", name: "XOM 08/21/26 125 Call", shares: 100, avgCost: null, price: null, invested: 36270, value: 43710, pl: 7440.00, pct: 20.51, realized: null },
+    { symbol: "XOM", name: "XOM 08/21/26 125 Call", type: "option", shares: 100, avgCost: null, price: null, invested: 36270, value: 43710, pl: 7440.00, pct: 20.51, realized: null },
     { symbol: "VPG", name: "Vishay Precision Group", shares: 10, avgCost: 113.0, price: 103.9, invested: 35030, value: 32206, pl: -2824.10, pct: -8.06, realized: null },
     { symbol: "UUUU", name: "Energy Fuels", shares: 55, avgCost: 20.3, price: 11.5, invested: 34646, value: 19590, pl: -15055.15, pct: -43.45, realized: -12827.80 },
     { symbol: "IBM", name: "IBM", shares: 5, avgCost: 218.0, price: 212.7, invested: 33790, value: 32964, pl: -826.15, pct: -2.44, realized: null },
@@ -30,11 +30,11 @@ window.HOLDINGS = {
     { symbol: "BHE", name: "BenchMark", shares: 10, avgCost: 83.5, price: 78.5, invested: 25891, value: 24320, pl: -1571.70, pct: -6.07, realized: null },
     { symbol: "FVRR", name: "Fiverr International", shares: 80, avgCost: 10.0, price: 11.2, invested: 24800, value: 27826, pl: 3025.60, pct: 12.20, realized: null },
     { symbol: "AVGO", name: "Broadcom", shares: 2, avgCost: 383.0, price: 370.8, invested: 23746, value: 22991, pl: -754.54, pct: -3.18, realized: null },
-    { symbol: "GSK", name: "GSK 11/20/26 45 Call", shares: null, avgCost: null, price: null, invested: 23870, value: 27435, pl: 3565.00, pct: 14.94, realized: null },
+    { symbol: "GSK", name: "GSK 11/20/26 45 Call", type: "option", shares: null, avgCost: null, price: null, invested: 23870, value: 27435, pl: 3565.00, pct: 14.94, realized: null },
     { symbol: "VOYG", name: "Voyager Technologies", shares: 20, avgCost: 33.0, price: 25.9, invested: 20460, value: 16058, pl: -4402.00, pct: -21.52, realized: null },
     { symbol: "CRGY", name: "Crescent Energy", shares: 60, avgCost: 9.5, price: 10.8, invested: 17670, value: 19995, pl: 2325.00, pct: 13.16, realized: null },
-    { symbol: "HAL", name: "HAL 10/16/26 32 Call", shares: 100, avgCost: null, price: null, invested: 14105, value: 14105, pl: 0.00, pct: 0.00, realized: null },
+    { symbol: "HAL", name: "HAL 10/16/26 32 Call", type: "option", shares: 100, avgCost: null, price: null, invested: 14105, value: 14105, pl: 0.00, pct: 0.00, realized: null },
     { symbol: "NBIL", name: "2X Long NBIS", shares: 10, avgCost: 31.0, price: 21.1, invested: 9610, value: 6553, pl: -3056.60, pct: -31.81, realized: null },
-    { symbol: "COP", name: "COP 08/21/26 115 Call", shares: 100, avgCost: null, price: null, invested: 6882, value: 11315, pl: 4433.00, pct: 64.41, realized: null }
+    { symbol: "COP", name: "COP 08/21/26 115 Call", type: "option", shares: 100, avgCost: null, price: null, invested: 6882, value: 11315, pl: 4433.00, pct: 64.41, realized: null }
   ]
 };
