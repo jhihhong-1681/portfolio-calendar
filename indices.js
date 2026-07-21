@@ -13,7 +13,7 @@ window.INDEX_HISTORY = [
     date: "2026-07-21",
     taiex: 4.20,    // 台股加權指數
     sp500: -0.19,   // S&P 500
-    nasdaq: null,   // 那斯達克綜合指數（來源比對失敗，留空）
-    sox: null       // 費城半導體指數（來源比對失敗，留空）
+    nasdaq: -0.05,  // 那斯達克綜合指數（次要來源比對失敗，採用Yahoo Finance）
+    sox: 0.60       // 費城半導體指數（次要來源比對失敗，採用Yahoo Finance）
   }
 ];
