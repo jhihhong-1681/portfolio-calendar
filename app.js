@@ -169,7 +169,54 @@ function render() {
   renderAssetChart();
 }
 
+// 幫圖表的 <svg> 加上滑鼠/觸控 hover：移到圖上會顯示垂直參考線、對應的點、跟一個顯示日期+數值的浮動提示框。
+// dims: { width, height, padL, padR }；n: 資料點個數；updatePoints(idx) 負責把 hover-line/dot 移到對應位置；
+// renderTooltipHtml(idx) 回傳提示框內容的 HTML。
+function setupChartHover(svgEl, containerEl, tooltipEl, dims, n, updatePoints, renderTooltipHtml) {
+  if (n < 1) return;
+  const { width, height, padL, padR } = dims;
+  const captureEl = svgEl.querySelector(".hover-capture");
+  if (!captureEl) return;
+
+  function idxFromClientX(clientX) {
+    const rect = svgEl.getBoundingClientRect();
+    const scaleX = rect.width / width;
+    const mx = (clientX - rect.left) / scaleX;
+    if (n === 1) return 0;
+    const ratio = (mx - padL) / (width - padL - padR);
+    return Math.max(0, Math.min(n - 1, Math.round(ratio * (n - 1))));
+  }
+
+  function handleMove(evt) {
+    const idx = idxFromClientX(evt.clientX);
+    updatePoints(idx);
+    tooltipEl.innerHTML = renderTooltipHtml(idx);
+    tooltipEl.style.display = "block";
+
+    const contRect = containerEl.getBoundingClientRect();
+    const tw = tooltipEl.offsetWidth;
+    const th = tooltipEl.offsetHeight;
+    let left = evt.clientX - contRect.left + 14;
+    let top = evt.clientY - contRect.top - th - 10;
+    if (left + tw > contRect.width) left = evt.clientX - contRect.left - tw - 14;
+    if (left < 0) left = 4;
+    if (top < 0) top = evt.clientY - contRect.top + 14;
+    tooltipEl.style.left = left + "px";
+    tooltipEl.style.top = top + "px";
+  }
+
+  function handleLeave() {
+    tooltipEl.style.display = "none";
+    svgEl.querySelectorAll(".hover-guide").forEach((g) => g.setAttribute("opacity", "0"));
+  }
+
+  captureEl.addEventListener("pointermove", handleMove);
+  captureEl.addEventListener("pointerleave", handleLeave);
+}
+
 const assetChartEl = document.getElementById("assetChart");
+const assetChartWrapEl = document.getElementById("assetChartWrap");
+const assetTooltipEl = document.getElementById("assetTooltip");
 
 // 總資產走勢：畫出 rawHistory 裡「全部」快照日期的總資產金額折線圖（不分月份，看長期走勢）
 function renderAssetChart() {
@@ -223,6 +270,11 @@ function renderAssetChart() {
     svg += `<line x1="${bx}" y1="${padT}" x2="${bx}" y2="${height - padBottom}" stroke="#9aa0a8" stroke-width="1" stroke-dasharray="3,3" />`;
   }
   svg += `<circle cx="${xFor(n - 1).toFixed(1)}" cy="${yFor(lastValue).toFixed(1)}" r="3.5" fill="${trendColor}" />`;
+  svg += `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent" class="hover-capture" style="cursor:crosshair;" />`;
+  svg += `<g class="hover-guide" opacity="0" style="pointer-events:none;">`;
+  svg += `<line class="hg-line" x1="0" y1="${padT}" x2="0" y2="${height - padBottom}" stroke="#8a8f98" stroke-width="1" stroke-dasharray="2,2" />`;
+  svg += `<circle class="hg-dot" r="4" fill="${trendColor}" stroke="#0d1117" stroke-width="1.5" />`;
+  svg += `</g>`;
   svg += `</svg>`;
 
   assetChartEl.innerHTML = svg;
@@ -236,9 +288,35 @@ function renderAssetChart() {
   if (basisChangeIndex >= 0) {
     assetChartEl.innerHTML += `<div class="footer" style="margin-top:6px;">虛線左側是用交易紀錄推算的美股部位（不含台幣現金/期貨/加密貨幣），右側才是完整總資產</div>`;
   }
+
+  const svgEl = assetChartEl.querySelector("svg");
+  const hoverGuide = svgEl.querySelector(".hover-guide");
+  const hgLine = svgEl.querySelector(".hg-line");
+  const hgDot = svgEl.querySelector(".hg-dot");
+  setupChartHover(
+    svgEl,
+    assetChartWrapEl,
+    assetTooltipEl,
+    { width, height, padL, padR },
+    n,
+    (idx) => {
+      hoverGuide.setAttribute("opacity", "1");
+      const x = xFor(idx).toFixed(1);
+      hgLine.setAttribute("x1", x);
+      hgLine.setAttribute("x2", x);
+      hgDot.setAttribute("cx", x);
+      hgDot.setAttribute("cy", yFor(values[idx]).toFixed(1));
+    },
+    (idx) => {
+      const r = rawHistory[idx];
+      return `<div class="tt-date">${r.date}</div><div class="tt-row"><span class="tt-dot" style="background:${trendColor}"></span><span class="tt-value">${fmtAmount(r.total).replace(/^[+-]/, "")}</span></div>`;
+    }
+  );
 }
 
 const compareChartEl = document.getElementById("compareChart");
+const compareChartWrapEl = document.getElementById("compareChartWrap");
+const compareTooltipEl = document.getElementById("compareTooltip");
 const compareLegendEl = document.getElementById("compareLegend");
 
 function renderCompareChart(year, month) {
@@ -311,6 +389,13 @@ function renderCompareChart(year, month) {
       .join(" ");
     svg += `<polyline points="${points}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
   }
+  svg += `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent" class="hover-capture" style="cursor:crosshair;" />`;
+  svg += `<g class="hover-guide" opacity="0" style="pointer-events:none;">`;
+  svg += `<line class="hg-line" x1="0" y1="${padT}" x2="0" y2="${height - padBottom}" stroke="#8a8f98" stroke-width="1" stroke-dasharray="2,2" />`;
+  for (const s of allSeries) {
+    svg += `<circle class="hg-dot" data-key="${s.key}" r="3.5" fill="${s.color}" stroke="#0d1117" stroke-width="1.2" />`;
+  }
+  svg += `</g>`;
   svg += `</svg>`;
 
   compareChartEl.innerHTML = svg;
@@ -322,6 +407,39 @@ function renderCompareChart(year, month) {
       return `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span>${s.label} <span class="legend-value ${cls}">${fmtPct(last)}</span></div>`;
     })
     .join("");
+
+  const svgEl = compareChartEl.querySelector("svg");
+  const hoverGuide = svgEl.querySelector(".hover-guide");
+  const hgLine = svgEl.querySelector(".hg-line");
+  const hgDots = svgEl.querySelectorAll(".hg-dot");
+  setupChartHover(
+    svgEl,
+    compareChartWrapEl,
+    compareTooltipEl,
+    { width, height, padL, padR },
+    n,
+    (idx) => {
+      hoverGuide.setAttribute("opacity", "1");
+      const x = xFor(idx).toFixed(1);
+      hgLine.setAttribute("x1", x);
+      hgLine.setAttribute("x2", x);
+      hgDots.forEach((dot) => {
+        const key = dot.getAttribute("data-key");
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", yFor(cumSeries[key][idx]).toFixed(1));
+      });
+    },
+    (idx) => {
+      const rows = allSeries
+        .map((s) => {
+          const v = cumSeries[s.key][idx];
+          const cls = v > 0 ? "gain" : v < 0 ? "loss" : "flat";
+          return `<div class="tt-row"><span class="tt-dot" style="background:${s.color}"></span>${s.label} <span class="tt-value ${cls}">${fmtPct(v)}</span></div>`;
+        })
+        .join("");
+      return `<div class="tt-date">${relevantDates[idx]}</div>${rows}`;
+    }
+  );
 }
 
 const holdingsSummaryEl = document.getElementById("holdingsSummary");
