@@ -336,6 +336,45 @@ body {
   opacity: 0.85;
 }
 
+.theme-section {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #232833;
+}
+
+.theme-exposure {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.theme-row-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #cfd3d8;
+  margin-bottom: 4px;
+}
+
+.theme-row-value {
+  margin-left: auto;
+  font-weight: 700;
+  color: #e6e6e6;
+}
+
+.theme-bar-track {
+  background: #1b2029;
+  border-radius: 4px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.theme-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
 .holdings-list {
   display: flex;
   flex-direction: column;

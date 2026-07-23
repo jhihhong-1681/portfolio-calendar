@@ -443,12 +443,84 @@ function renderCompareChart(year, month) {
 }
 
 const holdingsSummaryEl = document.getElementById("holdingsSummary");
+const themeExposureEl = document.getElementById("themeExposure");
 const holdingsListEl = document.getElementById("holdingsList");
 const holdingsFooterEl = document.getElementById("holdingsFooter");
+
+// 股票代號 -> 主題分類，手動維護。新增持股時要記得補上對照，不然會被歸到「未分類」。
+const THEME_MAP = {
+  MU: "AI基建/半導體",
+  AVGO: "AI基建/半導體",
+  IBM: "AI基建/半導體",
+  NBIL: "AI基建/半導體",
+  NET: "資安/軟體",
+  PLTR: "資安/軟體",
+  MSFL: "資安/軟體",
+  SMR: "核能",
+  UUUU: "核能",
+  ASTS: "國防太空",
+  RKLB: "國防太空",
+  VOYG: "國防太空",
+  MP: "稀土關鍵金屬",
+  NU: "金融科技",
+  VPG: "機器人",
+  BHE: "機器人",
+  XOM: "其他-能源/石油",
+  CRGY: "其他-能源/石油",
+  HAL: "其他-能源/石油",
+  GSK: "其他-醫療保健",
+  FVRR: "其他-消費網路",
+  UGL: "其他-貴金屬避險"
+};
+
+const THEME_COLORS = [
+  "#4da3ff", "#2fbf6a", "#ff8a3d", "#b96bff", "#f5c518",
+  "#ff5c5c", "#3ddad7", "#e879b9", "#9aa0a8", "#7ee787", "#ffb454"
+];
 
 function fmtUsd(n) {
   if (n === null || n === undefined) return "-";
   return "$" + Number(n).toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+}
+
+// 依 THEME_MAP 把持股現值分組加總，畫成橫向比例條，看整體主題曝險集中度。
+function renderThemeExposure(positions) {
+  if (!positions.length) {
+    themeExposureEl.innerHTML = "";
+    return;
+  }
+
+  const totals = new Map();
+  for (const p of positions) {
+    const theme = THEME_MAP[p.symbol] || "未分類";
+    totals.set(theme, (totals.get(theme) || 0) + (p.value || 0));
+  }
+
+  const grandTotal = [...totals.values()].reduce((a, b) => a + b, 0);
+  if (grandTotal <= 0) {
+    themeExposureEl.innerHTML = "";
+    return;
+  }
+
+  const rows = [...totals.entries()].sort((a, b) => b[1] - a[1]);
+
+  themeExposureEl.innerHTML = rows
+    .map(([theme, value], i) => {
+      const pct = (value / grandTotal) * 100;
+      const color = THEME_COLORS[i % THEME_COLORS.length];
+      return `
+        <div class="theme-row">
+          <div class="theme-row-label">
+            <span class="legend-dot" style="background:${color}"></span>${theme}
+            <span class="theme-row-value">${fmtAmount(value).replace(/^[+-]/, "")}（${pct.toFixed(1)}%）</span>
+          </div>
+          <div class="theme-bar-track">
+            <div class="theme-bar-fill" style="width:${pct.toFixed(2)}%;background:${color};"></div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderHoldings() {
@@ -492,6 +564,8 @@ function renderHoldings() {
       <div class="metric-value ${realizedCls}">${fmtAmount(t.realizedPL)}</div>
     </div>
   `;
+
+  renderThemeExposure(h.positions || []);
 
   const positions = h.positions || [];
   holdingsListEl.innerHTML = positions
