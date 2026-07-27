@@ -444,6 +444,7 @@ function renderCompareChart(year, month) {
 
 const holdingsSummaryEl = document.getElementById("holdingsSummary");
 const themeExposureEl = document.getElementById("themeExposure");
+const expiryListEl = document.getElementById("expiryList");
 const holdingsListEl = document.getElementById("holdingsList");
 const holdingsFooterEl = document.getElementById("holdingsFooter");
 
@@ -523,6 +524,82 @@ function renderThemeExposure(positions) {
     .join("");
 }
 
+// holdings.js 的 name 欄位對選擇權是純文字，例如 "XOM 08/21/26 125 Call"，
+// 到期日/履約價只能從這個字串解析，沒有結構化欄位。
+function parseOptionExpiry(name) {
+  if (!name) return null;
+  const m = name.match(/(\d{1,2})\/(\d{1,2})\/(\d{2})\s+([\d.]+)\s+(Call|Put)/i);
+  if (!m) return null;
+  const [, mm, dd, yy, strike, optType] = m;
+  const year = 2000 + parseInt(yy, 10);
+  const date = new Date(year, parseInt(mm, 10) - 1, parseInt(dd, 10));
+  const dateStr = `${year}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+  return { date, dateStr, strike: parseFloat(strike), optType: optType[0].toUpperCase() + optType.slice(1).toLowerCase() };
+}
+
+function daysUntil(date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / 86400000);
+}
+
+// 選擇權部位依到期日由近到遠排序，30天內標黃、7天內標紅提醒。
+function renderOptionExpiry(positions) {
+  const options = (positions || [])
+    .filter((p) => p.type === "option")
+    .map((p) => ({ ...p, parsed: parseOptionExpiry(p.name) }))
+    .sort((a, b) => {
+      if (!a.parsed && !b.parsed) return 0;
+      if (!a.parsed) return 1;
+      if (!b.parsed) return -1;
+      return a.parsed.date - b.parsed.date;
+    });
+
+  if (!options.length) {
+    expiryListEl.innerHTML = '<div class="flat" style="font-size:12px;">目前沒有選擇權部位</div>';
+    return;
+  }
+
+  expiryListEl.innerHTML = options
+    .map((p) => {
+      const plCls = p.pl > 0 ? "gain" : p.pl < 0 ? "loss" : "flat";
+      if (!p.parsed) {
+        return `
+          <div class="expiry-row">
+            <div class="expiry-main">
+              <span class="expiry-symbol">${p.symbol}</span>
+              <span class="expiry-name">${p.name || ""}</span>
+            </div>
+            <div class="expiry-right">
+              <div class="expiry-days flat">到期日未知</div>
+              <div class="expiry-pl ${plCls}">${fmtAmount(p.pl)}</div>
+            </div>
+          </div>
+        `;
+      }
+      const days = daysUntil(p.parsed.date);
+      let urgencyCls = "";
+      if (days <= 7) urgencyCls = "expiry-urgent";
+      else if (days <= 30) urgencyCls = "expiry-soon";
+      const daysTxt = days < 0 ? "已到期" : days === 0 ? "今天到期" : `${days} 天`;
+      return `
+        <div class="expiry-row ${urgencyCls}">
+          <div class="expiry-main">
+            <span class="expiry-symbol">${p.symbol}</span>
+            <span class="expiry-name">${p.parsed.strike} ${p.parsed.optType} · ${p.parsed.dateStr}</span>
+          </div>
+          <div class="expiry-right">
+            <div class="expiry-days">${daysTxt}</div>
+            <div class="expiry-pl ${plCls}">${fmtAmount(p.pl)}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function renderHoldings() {
   const h = window.HOLDINGS;
   if (!h) {
@@ -566,6 +643,7 @@ function renderHoldings() {
   `;
 
   renderThemeExposure(h.positions || []);
+  renderOptionExpiry(h.positions || []);
 
   const positions = h.positions || [];
   holdingsListEl.innerHTML = positions

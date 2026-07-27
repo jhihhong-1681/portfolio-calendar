@@ -375,6 +375,69 @@ body {
   border-radius: 4px;
 }
 
+.expiry-section {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #232833;
+}
+
+.expiry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.expiry-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: #1b2029;
+  border-radius: 8px;
+  padding: 8px 11px;
+  border-left: 3px solid #3a3f4a;
+}
+
+.expiry-row.expiry-soon { border-left-color: #f5c518; }
+.expiry-row.expiry-urgent { border-left-color: #ff5c5c; }
+
+.expiry-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.expiry-symbol {
+  font-weight: 700;
+  font-size: 13px;
+  color: #e6e6e6;
+}
+
+.expiry-name {
+  font-size: 10.5px;
+  color: #9aa0a8;
+}
+
+.expiry-right {
+  text-align: right;
+  flex: none;
+}
+
+.expiry-days {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #cfd3d8;
+}
+
+.expiry-row.expiry-urgent .expiry-days { color: #ff5c5c; }
+.expiry-row.expiry-soon .expiry-days { color: #f5c518; }
+
+.expiry-pl {
+  font-size: 10.5px;
+  margin-top: 2px;
+}
+
 .holdings-list {
   display: flex;
   flex-direction: column;
