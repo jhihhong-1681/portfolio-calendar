@@ -2,7 +2,7 @@
 // 只列「目前還有部位」的股票/期權（總投入、現值有值的），已經全部賣光的舊部位不會出現在這裡，
 // 但它們的已實現損益仍計入 totals.realizedPL。
 window.HOLDINGS = {
-  asOf: "2026-07-28",
+  asOf: "2026-07-27",
   totals: {
     invested: 942074,
     value: 754554,
