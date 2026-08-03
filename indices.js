@@ -155,5 +155,12 @@ window.INDEX_HISTORY = [
     sp500: 1.66,    // S&P 500
     nasdaq: 2.78,   // 那斯達克綜合指數
     sox: 8.16       // 費城半導體指數（Yahoo Finance +8.16%，investing.com +8.19%、Google Finance +8.18% 交叉比對成功）
+  },
+  {
+    date: "2026-07-31",
+    taiex: null,    // 台股加權指數（finance.yahoo.com/history 連續503無法取得，僅WebSearch有數字但無法比對，依規則留空）
+    sp500: 0.70,    // S&P 500
+    nasdaq: 1.00,   // 那斯達克綜合指數
+    sox: 1.18       // 費城半導體指數（次要來源查無可比對的收盤數字，採用Yahoo Finance）
   }
 ];
