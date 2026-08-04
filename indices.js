@@ -162,5 +162,12 @@ window.INDEX_HISTORY = [
     sp500: 0.70,    // S&P 500
     nasdaq: 1.00,   // 那斯達克綜合指數
     sox: 1.18       // 費城半導體指數（次要來源查無可比對的收盤數字，採用Yahoo Finance）
+  },
+  {
+    date: "2026-08-03",
+    taiex: 0.62,    // 台股加權指數（finance.yahoo.com/history 503，改用tw.stock.yahoo.com收盤43,386.41與WebSearch +0.62%交叉比對成功）
+    sp500: 1.48,    // S&P 500（次要來源抓到過期資料(7/30 +0.7%)，比對失敗，採用Yahoo Finance）
+    nasdaq: 2.13,   // 那斯達克綜合指數（次要來源抓到過期資料(7/31 +1.00%)，比對失敗，採用Yahoo Finance）
+    sox: 1.05       // 費城半導體指數（次要來源抓到不合理數字(6,308.20 +1.57%)，比對失敗，採用Yahoo Finance）
   }
 ];
