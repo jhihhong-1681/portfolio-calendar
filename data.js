@@ -4,9 +4,6 @@
 //   已對照月結表(4/30, 5/30, 6/30 美股總資產)校驗，誤差在 ±2.3% 內。
 // - 2026-07-18 起：basis 是 "total_assets"，是每天排程任務讀到的「總資產」(含全部帳戶)，
 //   跟前面的 us_stock 基準不同，所以日曆算報酬時這個交界不會硬算差額(見 app.js dailyMap)。
-// - 2026-08-03(週一)：當天排程沒有留下總資產快照(漏跑)，且 Google Sheet 只會顯示「當下」數字、
-//   無法回頭查到當天收盤的總資產，所以這天永久缺資料，不補猜測值。app.js dailyMap 會偵測到
-//   這個缺口，08-04 不會把 07-31~08-04 的三天漲跌全部算成一天。
 window.PORTFOLIO_HISTORY = [
   { date: "2026-04-30", total: 979726, basis: "us_stock" },
   { date: "2026-05-01", total: 984216, basis: "us_stock" },
@@ -75,5 +72,6 @@ window.PORTFOLIO_HISTORY = [
   { date: "2026-07-29", total: 940059, basis: "total_assets" },
   { date: "2026-07-30", total: 967136, basis: "total_assets" },
   { date: "2026-07-31", total: 949288, basis: "total_assets" },
-  { date: "2026-08-04", total: 982823, basis: "total_assets" }
+  { date: "2026-08-03", total: 982823, basis: "total_assets" },
+  { date: "2026-08-04", total: 1032780, basis: "total_assets" }
 ];
