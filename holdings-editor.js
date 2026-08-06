@@ -39,9 +39,15 @@ function num(v) {
   return v === null || v === undefined ? "" : v;
 }
 
+// 輸入框失去焦點時顯示的格式：帶千分位逗點。取值時要先把逗點拿掉才能轉數字。
+function fmtInputNum(n) {
+  if (n === null || n === undefined || n === "") return "";
+  return Number(n).toLocaleString("en-US", { maximumFractionDigits: 4 });
+}
+
 function getNumOrNull(str) {
   if (str === "" || str === null || str === undefined) return null;
-  const n = Number(str);
+  const n = Number(String(str).replace(/,/g, ""));
   return Number.isNaN(n) ? null : n;
 }
 
@@ -128,14 +134,15 @@ function render() {
   sheetBody.innerHTML = positions
     .map((p, idx) => {
       const plCls = p.pl > 0 ? "gain-text" : p.pl < 0 ? "loss-text" : "";
+      const realizedCls = p.realized > 0 ? "gain-text" : p.realized < 0 ? "loss-text" : "";
       const isOption = isOptionRow(p);
       // 美股的總投入/現值是公式(股數×成本均價/現價×匯率)算出來的，跟損益/報酬率一樣唯讀；
       // 期權沒有公式，維持跟 Sheet 一樣可以直接輸入。
       const investedCell = isOption
-        ? `<input type="number" step="1" data-field="invested" data-idx="${idx}" value="${num(p.invested)}" ${dis} />`
+        ? `<input type="text" inputmode="decimal" class="money-input" data-field="invested" data-idx="${idx}" value="${fmtInputNum(p.invested)}" ${dis} />`
         : `<span class="cell-readonly">${fmtMoney(p.invested)}</span>`;
       const valueCell = isOption
-        ? `<input type="number" step="1" data-field="value" data-idx="${idx}" value="${num(p.value)}" ${dis} />`
+        ? `<input type="text" inputmode="decimal" class="money-input" data-field="value" data-idx="${idx}" value="${fmtInputNum(p.value)}" ${dis} />`
         : `<span class="cell-readonly">${fmtMoney(p.value)}</span>`;
       return `
         <tr data-idx="${idx}">
@@ -147,17 +154,17 @@ function render() {
           </td>
           <td><input data-field="symbol" data-idx="${idx}" value="${p.symbol || ""}" ${dis} /></td>
           <td><input data-field="name" data-idx="${idx}" value="${p.name || ""}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="shares" data-idx="${idx}" value="${num(p.shares)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="shares" data-idx="${idx}" value="${fmtInputNum(p.shares)}" ${dis} /></td>
           <td><input data-field="firstEntry" data-idx="${idx}" value="${num(p.firstEntry)}" ${dis} /></td>
-          <td><input type="number" step="0.01" data-field="avgCost" data-idx="${idx}" value="${num(p.avgCost)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="avgCost" data-idx="${idx}" value="${fmtInputNum(p.avgCost)}" ${dis} /></td>
           <td><input data-field="currency" data-idx="${idx}" value="${p.currency || "USD"}" ${dis} /></td>
-          <td><input type="number" step="0.01" data-field="price" data-idx="${idx}" value="${num(p.price)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="price" data-idx="${idx}" value="${fmtInputNum(p.price)}" ${dis} /></td>
           <td>${investedCell}</td>
           <td>${valueCell}</td>
           <td><span class="cell-readonly ${plCls}">${fmtMoney(p.pl)}</span></td>
           <td><span class="cell-readonly ${plCls}">${fmtPct(p.pct)}</span></td>
           <td><input data-field="closedNotes" data-idx="${idx}" value="${p.closedNotes || ""}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="realized" data-idx="${idx}" value="${num(p.realized)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input ${realizedCls}" data-field="realized" data-idx="${idx}" value="${fmtInputNum(p.realized)}" ${dis} /></td>
           <td>${editMode ? `<button class="del-cell-btn" type="button" data-del-idx="${idx}">✕</button>` : ""}</td>
         </tr>
       `;
@@ -165,10 +172,11 @@ function render() {
     .join("");
 
   const unrealCls = t.unrealizedPL > 0 ? "gain-text" : t.unrealizedPL < 0 ? "loss-text" : "";
+  const realizedTotalCls = t.realizedPL > 0 ? "gain-text" : t.realizedPL < 0 ? "loss-text" : "";
   sheetFoot.innerHTML = `
     <tr>
       <td colspan="8" style="text-align:right;">CASH 現金</td>
-      <td><input type="number" step="1" data-total-field="cash" value="${num(t.cash)}" ${dis} /></td>
+      <td><input type="text" inputmode="decimal" class="money-input" data-total-field="cash" value="${fmtInputNum(t.cash)}" ${dis} /></td>
       <td colspan="5"></td>
     </tr>
     <tr>
@@ -178,12 +186,17 @@ function render() {
       <td class="${unrealCls}">${fmtMoney(t.unrealizedPL)}</td>
       <td class="${unrealCls}">${fmtPct(t.unrealizedPct)}</td>
       <td></td>
-      <td><input type="number" step="1" data-total-field="realizedPL" value="${num(t.realizedPL)}" ${dis} /></td>
+      <td><input type="text" inputmode="decimal" class="money-input ${realizedTotalCls}" data-total-field="realizedPL" value="${fmtInputNum(t.realizedPL)}" ${dis} /></td>
       <td></td>
     </tr>
     <tr>
       <td colspan="8" style="text-align:right;">總資產</td>
-      <td colspan="2"><input type="number" step="1" data-total-field="totalAssets" value="${num(t.totalAssets)}" ${dis} /></td>
+      <td colspan="2"><input type="text" inputmode="decimal" class="money-input" data-total-field="totalAssets" value="${fmtInputNum(t.totalAssets)}" ${dis} /></td>
+      <td colspan="4"></td>
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align:right;">現金水位（%，手動填）</td>
+      <td colspan="2"><input type="text" inputmode="decimal" class="money-input" data-total-field="cashRatio" value="${fmtInputNum(t.cashRatio)}" ${dis} /></td>
       <td colspan="4"></td>
     </tr>
   `;
@@ -204,6 +217,22 @@ async function persist() {
     alert("同步到雲端失敗，請檢查網路連線再試一次（這筆修改還沒存起來，重新整理可能會遺失）");
   }
 }
+
+// 數字欄位平常顯示千分位逗點；點進去編輯時先拿掉逗點方便打字，離開時再補回去。
+function bindMoneyInputFormatting(container) {
+  container.addEventListener("focusin", (e) => {
+    if (e.target.classList.contains("money-input")) {
+      e.target.value = e.target.value.replace(/,/g, "");
+    }
+  });
+  container.addEventListener("focusout", (e) => {
+    if (e.target.classList.contains("money-input")) {
+      e.target.value = fmtInputNum(getNumOrNull(e.target.value));
+    }
+  });
+}
+bindMoneyInputFormatting(sheetBody);
+bindMoneyInputFormatting(sheetFoot);
 
 sheetBody.addEventListener("change", (e) => {
   const t = e.target;

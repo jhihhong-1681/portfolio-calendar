@@ -62,9 +62,15 @@ function num(v) {
   return v === null || v === undefined ? "" : v;
 }
 
+// 輸入框失去焦點時顯示的格式：帶千分位逗點。取值時要先把逗點拿掉才能轉數字。
+function fmtInputNum(n) {
+  if (n === null || n === undefined || n === "") return "";
+  return Number(n).toLocaleString("en-US", { maximumFractionDigits: 4 });
+}
+
 function getNumOrNull(str) {
   if (str === "" || str === null || str === undefined) return null;
-  const n = Number(str);
+  const n = Number(String(str).replace(/,/g, ""));
   return Number.isNaN(n) ? null : n;
 }
 
@@ -95,6 +101,7 @@ function recompute() {
   }
 }
 
+// Y 軸每 20 萬(200,000)畫一條格線；X 軸一個月一個刻度，顯示每一筆的年/月。
 function renderChart() {
   if (!rows || rows.length < 2) {
     nwChartEl.innerHTML = '<div style="font-size:12px;padding:10px 0;color:#80868b;">累積兩筆以上資料才能畫出走勢</div>';
@@ -103,20 +110,20 @@ function renderChart() {
   }
   const sorted = [...rows].sort((a, b) => new Date(a.date) - new Date(b.date));
   const values = sorted.map((r) => r.grandTotal || 0);
+  const Y_STEP = 200000;
 
   const width = 900;
-  const height = 160;
-  const padL = 6;
-  const padR = 6;
-  const padT = 10;
-  const padBottom = 10;
+  const height = 220;
+  const padL = 64;
+  const padR = 10;
+  const padT = 12;
+  const padBottom = 26;
 
-  let min = Math.min(...values);
-  let max = Math.max(...values);
-  if (min === max) {
-    min -= 1;
-    max += 1;
-  }
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values);
+  let min = Math.floor(rawMin / Y_STEP) * Y_STEP;
+  let max = Math.ceil(rawMax / Y_STEP) * Y_STEP;
+  if (min === max) max = min + Y_STEP;
 
   const n = values.length;
   const xFor = (i) => (n === 1 ? padL : padL + (i / (n - 1)) * (width - padL - padR));
@@ -129,7 +136,29 @@ function renderChart() {
   const firstValue = values[0];
   const trendColor = lastValue >= firstValue ? "#d93025" : "#188038"; // 台股慣例：漲=紅, 跌=綠
 
+  // 月份標籤：把 "2026/07/31" 這種格式轉成 "25/07" 這種短格式。
+  function monthLabel(dateStr) {
+    const parts = dateStr.split(/[\/\-]/);
+    if (parts.length < 2) return dateStr;
+    return parts[0].slice(2) + "/" + parts[1].padStart(2, "0");
+  }
+
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Y 軸格線 + 標籤（每 20 萬一條）
+  for (let v = min; v <= max; v += Y_STEP) {
+    const y = yFor(v).toFixed(1);
+    svg += `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="#e8eaed" stroke-width="1" />`;
+    svg += `<text x="${padL - 8}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="#80868b">${(v / 10000).toFixed(0)}萬</text>`;
+  }
+
+  // X 軸刻度 + 月份標籤（一個月一個單位，每一筆資料畫一個刻度）
+  sorted.forEach((r, i) => {
+    const x = xFor(i).toFixed(1);
+    svg += `<line x1="${x}" y1="${height - padBottom}" x2="${x}" y2="${height - padBottom + 4}" stroke="#c0c4c9" stroke-width="1" />`;
+    svg += `<text x="${x}" y="${height - padBottom + 16}" text-anchor="middle" font-size="10" fill="#80868b">${monthLabel(r.date)}</text>`;
+  });
+
   svg += `<polygon points="${areaPoints}" fill="${trendColor}" fill-opacity="0.10" />`;
   svg += `<polyline points="${points}" fill="none" stroke="${trendColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />`;
   svg += `<circle cx="${xFor(n - 1).toFixed(1)}" cy="${yFor(lastValue).toFixed(1)}" r="3.5" fill="${trendColor}" />`;
@@ -143,8 +172,8 @@ function renderChart() {
   nwChartEl.innerHTML = svg;
 
   nwLegendEl.innerHTML = `
-    <span>期間最高 <span class="legend-value">NT$${fmtMoney(max)}</span></span>
-    <span>期間最低 <span class="legend-value">NT$${fmtMoney(min)}</span></span>
+    <span>期間最高 <span class="legend-value">NT$${fmtMoney(rawMax)}</span></span>
+    <span>期間最低 <span class="legend-value">NT$${fmtMoney(rawMin)}</span></span>
     <span>目前 <span class="legend-value">NT$${fmtMoney(lastValue)}</span></span>
   `;
 
@@ -214,19 +243,19 @@ function render() {
       return `
         <tr data-idx="${idx}">
           <td><input data-field="date" data-idx="${idx}" value="${r.date || ""}" ${dis} placeholder="YYYY/MM/DD" /></td>
-          <td><input type="number" step="1" data-field="usStockValue" data-idx="${idx}" value="${num(r.usStockValue)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="usStockCash" data-idx="${idx}" value="${num(r.usStockCash)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="principal" data-idx="${idx}" value="${num(r.principal)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="usStockValue" data-idx="${idx}" value="${fmtInputNum(r.usStockValue)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="usStockCash" data-idx="${idx}" value="${fmtInputNum(r.usStockCash)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="principal" data-idx="${idx}" value="${fmtInputNum(r.principal)}" ${dis} /></td>
           <td><span class="cell-readonly">${fmtMoney(r.usStockTotal)}</span></td>
           <td><span class="cell-readonly ${returnCls}">${fmtPct(r.returnPct)}</span></td>
           <td><input data-field="yoy" data-idx="${idx}" value="${num(r.yoy)}" ${dis} /></td>
           <td><span class="cell-readonly ${momCls}">${fmtPct(r.mom)}</span></td>
-          <td><input type="number" step="0.01" data-field="cashRatio" data-idx="${idx}" value="${num(r.cashRatio)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="cathay" data-idx="${idx}" value="${num(r.cathay)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="ctbc" data-idx="${idx}" value="${num(r.ctbc)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="esun" data-idx="${idx}" value="${num(r.esun)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="esunFutures" data-idx="${idx}" value="${num(r.esunFutures)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="crypto" data-idx="${idx}" value="${num(r.crypto)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="cashRatio" data-idx="${idx}" value="${fmtInputNum(r.cashRatio)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="cathay" data-idx="${idx}" value="${fmtInputNum(r.cathay)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="ctbc" data-idx="${idx}" value="${fmtInputNum(r.ctbc)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="esun" data-idx="${idx}" value="${fmtInputNum(r.esun)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="esunFutures" data-idx="${idx}" value="${fmtInputNum(r.esunFutures)}" ${dis} /></td>
+          <td><input type="text" inputmode="decimal" class="money-input" data-field="crypto" data-idx="${idx}" value="${fmtInputNum(r.crypto)}" ${dis} /></td>
           <td><span class="cell-readonly">${fmtMoney(r.otherTotal)}</span></td>
           <td><span class="cell-readonly">${fmtMoney(r.grandTotal)}</span></td>
           <td>${editMode ? `<button class="del-cell-btn" type="button" data-del-idx="${idx}">✕</button>` : ""}</td>
@@ -251,6 +280,18 @@ async function persist() {
 }
 
 const TEXT_FIELDS = ["date", "yoy"];
+
+// 數字欄位平常顯示千分位逗點；點進去編輯時先拿掉逗點方便打字，離開時再補回去。
+nwBody.addEventListener("focusin", (e) => {
+  if (e.target.classList.contains("money-input")) {
+    e.target.value = e.target.value.replace(/,/g, "");
+  }
+});
+nwBody.addEventListener("focusout", (e) => {
+  if (e.target.classList.contains("money-input")) {
+    e.target.value = fmtInputNum(getNumOrNull(e.target.value));
+  }
+});
 
 nwBody.addEventListener("change", (e) => {
   const t = e.target;

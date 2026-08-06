@@ -154,6 +154,11 @@ body {
 .cell-readonly {
   padding: 4px 5px;
   display: block;
+  font-weight: 700;
+}
+
+.money-input {
+  font-weight: 700;
 }
 
 /* 台股慣例：紅 = 賺錢(正), 綠 = 賠錢(負) */
