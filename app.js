@@ -625,6 +625,10 @@ function renderOptionExpiry(positions) {
     .join("");
 }
 
+function num(v) {
+  return v === null || v === undefined || v === "" ? "" : v;
+}
+
 function renderHoldings() {
   const h = window.HOLDINGS;
   if (!h) {
@@ -634,9 +638,20 @@ function renderHoldings() {
     return;
   }
 
-  const t = h.totals || {};
+  const editing = !!window.EDIT_MODE;
+  const t = h.totals || (h.totals = {});
   const unrealizedCls = t.unrealizedPL > 0 ? "gain" : t.unrealizedPL < 0 ? "loss" : "flat";
   const realizedCls = t.realizedPL > 0 ? "gain" : t.realizedPL < 0 ? "loss" : "flat";
+
+  const cashCell = editing
+    ? `<input class="edit-input" type="number" step="1" data-total-field="cash" value="${num(t.cash)}" />`
+    : fmtAmount(t.cash).replace(/^[+-]/, "");
+  const totalAssetsCell = editing
+    ? `<input class="edit-input" type="number" step="1" data-total-field="totalAssets" value="${num(t.totalAssets)}" />`
+    : fmtAmount(t.totalAssets).replace(/^[+-]/, "");
+  const realizedCell = editing
+    ? `<input class="edit-input" type="number" step="1" data-total-field="realizedPL" value="${num(t.realizedPL)}" />`
+    : fmtAmount(t.realizedPL);
 
   holdingsSummaryEl.innerHTML = `
     <div class="metric">
@@ -649,12 +664,12 @@ function renderHoldings() {
     </div>
     <div class="metric">
       <div class="metric-label">現金</div>
-      <div class="metric-value">${fmtAmount(t.cash).replace(/^[+-]/, "")}</div>
+      <div class="metric-value">${cashCell}</div>
       <div class="metric-sub flat">水位 ${t.totalAssets ? ((t.cash / t.totalAssets) * 100).toFixed(1) : "0.0"}%</div>
     </div>
     <div class="metric wide">
       <div class="metric-label">總資產（含現金/期貨/加密貨幣）</div>
-      <div class="metric-value">${fmtAmount(t.totalAssets).replace(/^[+-]/, "")}</div>
+      <div class="metric-value">${totalAssetsCell}</div>
     </div>
     <div class="metric">
       <div class="metric-label">未實現損益</div>
@@ -663,7 +678,7 @@ function renderHoldings() {
     </div>
     <div class="metric">
       <div class="metric-label">已實現損益</div>
-      <div class="metric-value ${realizedCls}">${fmtAmount(t.realizedPL)}</div>
+      <div class="metric-value ${realizedCls}">${realizedCell}</div>
     </div>
   `;
 
@@ -671,13 +686,40 @@ function renderHoldings() {
   renderOptionExpiry(h.positions || []);
 
   const positions = h.positions || [];
-  holdingsListEl.innerHTML = positions
-    .map((p) => {
+  const rowsHtml = positions
+    .map((p, idx) => {
       const borderCls = p.pl > 0 ? "gain-border" : p.pl < 0 ? "loss-border" : "";
       const plCls = p.pl > 0 ? "gain" : p.pl < 0 ? "loss" : "flat";
       const isOption = p.type === "option";
-      const sharesTxt = p.shares !== null && p.shares !== undefined ? `${p.shares} 股` : "";
       const optionTag = isOption ? '<span class="h-tag">期權</span>' : "";
+
+      if (editing) {
+        return `
+          <div class="holding-row ${borderCls} editing">
+            <div class="h-line1">
+              <span>
+                <input class="edit-input edit-symbol" data-field="symbol" data-idx="${idx}" value="${p.symbol || ""}" placeholder="代號" />
+                <input class="edit-input edit-shares" type="number" step="1" data-field="shares" data-idx="${idx}" value="${num(p.shares)}" placeholder="股數" />
+                ${optionTag}
+              </span>
+              <span class="h-pl ${plCls}">${fmtAmount(p.pl)} <span style="font-size:10.5px;">(${fmtPct(p.pct)})</span></span>
+            </div>
+            <input class="edit-input edit-name" data-field="name" data-idx="${idx}" value="${p.name || ""}" placeholder="名稱" />
+            <div class="h-line2 edit-line2">
+              <span>成本 <input class="edit-input edit-small" type="number" step="0.01" data-field="avgCost" data-idx="${idx}" value="${num(p.avgCost)}" /> → 現價 <input class="edit-input edit-small" type="number" step="0.01" data-field="price" data-idx="${idx}" value="${num(p.price)}" /></span>
+            </div>
+            <div class="h-line2 edit-line2">
+              <span>投入 <input class="edit-input edit-small" type="number" step="1" data-field="invested" data-idx="${idx}" value="${num(p.invested)}" /> → 現值 <input class="edit-input edit-small" type="number" step="1" data-field="value" data-idx="${idx}" value="${num(p.value)}" /></span>
+            </div>
+            <div class="h-line3 edit-line3">
+              已實現：<input class="edit-input edit-small" type="number" step="1" data-field="realized" data-idx="${idx}" value="${num(p.realized)}" />
+              <button class="del-row-btn" type="button" data-del-idx="${idx}">刪除</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const sharesTxt = p.shares !== null && p.shares !== undefined ? `${p.shares} 股` : "";
       const nameTxt = p.name && p.name !== p.symbol ? `<div class="h-name">${p.name}</div>` : "";
       const costLine = p.avgCost !== null && p.avgCost !== undefined
         ? `成本 ${fmtUsd(p.avgCost)} → 現價 ${fmtUsd(p.price)}`
@@ -703,9 +745,79 @@ function renderHoldings() {
     })
     .join("");
 
+  holdingsListEl.innerHTML = editing
+    ? rowsHtml + '<button id="addRowBtn" class="add-row-btn" type="button">＋ 新增持股</button>'
+    : rowsHtml;
+
   holdingsFooterEl.textContent = `快照時間：${h.asOf}`;
 }
 
+function getNumOrNull(str) {
+  if (str === "" || str === null || str === undefined) return null;
+  const n = Number(str);
+  return Number.isNaN(n) ? null : n;
+}
+
+// 任何一格被改動後：重新算衍生欄位(pl/pct/總投入/現值/未實現損益)、重畫、然後嘗試存回雲端。
+// 存雲端失敗也沒關係，畫面上的改動不會不見，下次改動或重整前都還在。
+function recomputeAndPersist() {
+  const h = window.HOLDINGS;
+  if (!h) return;
+  const positions = h.positions || [];
+  for (const p of positions) {
+    if (p.invested !== null && p.invested !== undefined && p.value !== null && p.value !== undefined) {
+      p.pl = p.value - p.invested;
+      p.pct = p.invested ? (p.pl / p.invested) * 100 : null;
+    }
+  }
+  const totals = h.totals || (h.totals = {});
+  totals.invested = positions.reduce((sum, p) => sum + (p.invested || 0), 0);
+  totals.value = positions.reduce((sum, p) => sum + (p.value || 0), 0);
+  totals.unrealizedPL = totals.value - totals.invested;
+  totals.unrealizedPct = totals.invested ? (totals.unrealizedPL / totals.invested) * 100 : null;
+  h.asOf = new Date().toISOString().slice(0, 10);
+  renderHoldings();
+  if (window.savePortfolio) window.savePortfolio(h);
+}
+
+holdingsListEl.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.dataset.field !== undefined && t.dataset.idx !== undefined) {
+    const idx = Number(t.dataset.idx);
+    const p = window.HOLDINGS && window.HOLDINGS.positions && window.HOLDINGS.positions[idx];
+    if (!p) return;
+    const field = t.dataset.field;
+    p[field] = field === "symbol" || field === "name" ? t.value : getNumOrNull(t.value);
+    recomputeAndPersist();
+  }
+});
+
+holdingsListEl.addEventListener("click", (e) => {
+  if (e.target.id === "addRowBtn") {
+    window.HOLDINGS.positions.push({
+      symbol: "NEW", name: "", shares: null, avgCost: null, price: null,
+      invested: 0, value: 0, pl: 0, pct: 0, realized: null
+    });
+    recomputeAndPersist();
+    return;
+  }
+  const delIdx = e.target.dataset.delIdx;
+  if (delIdx !== undefined) {
+    if (!confirm("確定要刪除這筆持股嗎？")) return;
+    window.HOLDINGS.positions.splice(Number(delIdx), 1);
+    recomputeAndPersist();
+  }
+});
+
+holdingsSummaryEl.addEventListener("change", (e) => {
+  const field = e.target.dataset.totalField;
+  if (field && window.HOLDINGS) {
+    window.HOLDINGS.totals[field] = getNumOrNull(e.target.value);
+    recomputeAndPersist();
+  }
+});
+
+window.renderHoldings = renderHoldings;
 renderHoldings();
 
 document.getElementById("prevBtn").addEventListener("click", () => {
