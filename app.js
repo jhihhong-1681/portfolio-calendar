@@ -484,14 +484,14 @@ const THEME_MAP = {
   VPG: "機器人",
   BHE: "機器人",
   BMNR: "加密貨幣",
-  XOM: "其他-能源/石油",
-  CRGY: "其他-能源/石油",
-  HAL: "其他-能源/石油",
-  GSK: "其他-醫療保健",
-  FVRR: "其他-消費網路",
-  UGL: "其他-貴金屬避險",
-  B: "其他-貴金屬避險",
-  CAG: "其他-民生消費"
+  XOM: "能源/石油",
+  CRGY: "能源/石油",
+  HAL: "能源/石油",
+  GSK: "醫療保健",
+  FVRR: "消費網路",
+  UGL: "貴金屬避險",
+  B: "貴金屬避險",
+  CAG: "民生消費"
 };
 
 const THEME_COLORS = [
@@ -512,9 +512,12 @@ function renderThemeExposure(positions) {
   }
 
   const totals = new Map();
+  const symbolsByTheme = new Map();
   for (const p of positions) {
     const theme = THEME_MAP[p.symbol] || "未分類";
     totals.set(theme, (totals.get(theme) || 0) + (p.value || 0));
+    if (!symbolsByTheme.has(theme)) symbolsByTheme.set(theme, []);
+    symbolsByTheme.get(theme).push(p.symbol);
   }
 
   const grandTotal = [...totals.values()].reduce((a, b) => a + b, 0);
@@ -529,12 +532,14 @@ function renderThemeExposure(positions) {
     .map(([theme, value], i) => {
       const pct = (value / grandTotal) * 100;
       const color = THEME_COLORS[i % THEME_COLORS.length];
+      const symbols = symbolsByTheme.get(theme).join("、");
       return `
         <div class="theme-row">
           <div class="theme-row-label">
             <span class="legend-dot" style="background:${color}"></span>${theme}
             <span class="theme-row-value">${fmtAmount(value).replace(/^[+-]/, "")}（${pct.toFixed(1)}%）</span>
           </div>
+          <div class="theme-row-symbols">${symbols}</div>
           <div class="theme-bar-track">
             <div class="theme-bar-fill" style="width:${pct.toFixed(2)}%;background:${color};"></div>
           </div>

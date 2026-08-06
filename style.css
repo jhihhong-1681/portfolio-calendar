@@ -363,6 +363,12 @@ body {
   color: #e6e6e6;
 }
 
+.theme-row-symbols {
+  font-size: 11px;
+  color: #7d8590;
+  margin: -2px 0 5px 15px;
+}
+
 .theme-bar-track {
   background: #1b2029;
   border-radius: 4px;
