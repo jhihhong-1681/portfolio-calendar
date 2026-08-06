@@ -25,6 +25,7 @@ const sheetBody = document.getElementById("sheetBody");
 const sheetFoot = document.getElementById("sheetFoot");
 const addRowBtn = document.getElementById("addRowBtn");
 const sheetFooterEl = document.getElementById("sheetFooter");
+const fxInputEl = document.getElementById("fxInput");
 
 let holdings = null; // 目前畫面上的資料，來自 Firestore
 let editMode = false;
@@ -54,11 +55,44 @@ function fmtPct(n) {
   return Number(n).toFixed(2) + "%";
 }
 
-// 損益/報酬率/總計都是公式算出來的，跟原本 Sheet 一樣不能直接編輯，只能改股數/成本/現價/總投入/現值這些「原始欄位」。
+// 原本 Sheet 裡：美股的「總投入」= 股數×成本均價×匯率，「現值」= 股數×現價×匯率(GOOGLEFINANCE)，
+// 都是公式；期權因為沒有 GOOGLEFINANCE 報價，Sheet 裡本來就是手動填總投入/現值，維持手動。
+function isOptionRow(p) {
+  return p.market === "期權" || p.type === "option";
+}
+
+// 如果還沒有存過匯率，從既有美股資料反推一個初始值（用「總投入 ÷ (股數×成本均價)」的平均），
+// 這樣第一次載入就有一個貼近現況的數字，而不是憑空塞一個 31。
+function estimateFxRate() {
+  const positions = (holdings && holdings.positions) || [];
+  let sum = 0;
+  let count = 0;
+  for (const p of positions) {
+    if (!isOptionRow(p) && p.shares && p.avgCost && p.invested) {
+      sum += p.invested / (p.shares * p.avgCost);
+      count++;
+    }
+  }
+  return count ? sum / count : 31;
+}
+
+// 損益/報酬率/總計都是公式算出來的，跟原本 Sheet 一樣不能直接編輯。
 function recompute() {
   if (!holdings) return;
+  if (holdings.fxRate === null || holdings.fxRate === undefined) {
+    holdings.fxRate = Number(estimateFxRate().toFixed(4));
+  }
+  const fx = holdings.fxRate;
   const positions = holdings.positions || [];
   for (const p of positions) {
+    if (!isOptionRow(p)) {
+      if (p.shares !== null && p.shares !== undefined && p.avgCost !== null && p.avgCost !== undefined) {
+        p.invested = p.shares * p.avgCost * fx;
+      }
+      if (p.shares !== null && p.shares !== undefined && p.price !== null && p.price !== undefined) {
+        p.value = p.shares * p.price * fx;
+      }
+    }
     if (p.invested !== null && p.invested !== undefined && p.value !== null && p.value !== undefined) {
       p.pl = p.value - p.invested;
       p.pct = p.invested ? (p.pl / p.invested) * 100 : null;
@@ -82,14 +116,27 @@ function render() {
     return;
   }
 
+  recompute();
+
   const positions = holdings.positions || [];
   const t = holdings.totals || {};
   const dis = editMode ? "" : "disabled";
 
+  fxInputEl.value = num(holdings.fxRate);
+  fxInputEl.disabled = !editMode;
+
   sheetBody.innerHTML = positions
     .map((p, idx) => {
       const plCls = p.pl > 0 ? "gain-text" : p.pl < 0 ? "loss-text" : "";
-      const isOption = p.market === "期權";
+      const isOption = isOptionRow(p);
+      // 美股的總投入/現值是公式(股數×成本均價/現價×匯率)算出來的，跟損益/報酬率一樣唯讀；
+      // 期權沒有公式，維持跟 Sheet 一樣可以直接輸入。
+      const investedCell = isOption
+        ? `<input type="number" step="1" data-field="invested" data-idx="${idx}" value="${num(p.invested)}" ${dis} />`
+        : `<span class="cell-readonly">${fmtMoney(p.invested)}</span>`;
+      const valueCell = isOption
+        ? `<input type="number" step="1" data-field="value" data-idx="${idx}" value="${num(p.value)}" ${dis} />`
+        : `<span class="cell-readonly">${fmtMoney(p.value)}</span>`;
       return `
         <tr data-idx="${idx}">
           <td>
@@ -105,8 +152,8 @@ function render() {
           <td><input type="number" step="0.01" data-field="avgCost" data-idx="${idx}" value="${num(p.avgCost)}" ${dis} /></td>
           <td><input data-field="currency" data-idx="${idx}" value="${p.currency || "USD"}" ${dis} /></td>
           <td><input type="number" step="0.01" data-field="price" data-idx="${idx}" value="${num(p.price)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="invested" data-idx="${idx}" value="${num(p.invested)}" ${dis} /></td>
-          <td><input type="number" step="1" data-field="value" data-idx="${idx}" value="${num(p.value)}" ${dis} /></td>
+          <td>${investedCell}</td>
+          <td>${valueCell}</td>
           <td><span class="cell-readonly ${plCls}">${fmtMoney(p.pl)}</span></td>
           <td><span class="cell-readonly ${plCls}">${fmtPct(p.pct)}</span></td>
           <td><input data-field="closedNotes" data-idx="${idx}" value="${p.closedNotes || ""}" ${dis} /></td>
@@ -183,6 +230,13 @@ sheetBody.addEventListener("click", (e) => {
     holdings.positions.splice(Number(delIdx), 1);
     persist();
   }
+});
+
+fxInputEl.addEventListener("change", (e) => {
+  if (!holdings) return;
+  const v = getNumOrNull(e.target.value);
+  holdings.fxRate = v === null ? undefined : v;
+  persist();
 });
 
 sheetFoot.addEventListener("change", (e) => {

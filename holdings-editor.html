@@ -16,10 +16,12 @@
     <div class="sheet-header">
       <h1>持股更新</h1>
       <div class="auth-row">
+        <span class="fx-row">匯率 USD/TWD <input id="fxInput" type="number" step="0.001" disabled /></span>
         <span class="auth-status" id="authStatus">連線中…</span>
         <button class="auth-btn" id="authBtn" type="button">登入編輯</button>
       </div>
     </div>
+    <div class="sheet-note">美股的「總投入」「現值」是公式（股數 × 成本均價／現價 × 匯率），跟原本 Sheet 一樣不能直接改；期權沒有這個公式（Sheet 裡本來就是手動填的），維持直接編輯。</div>
 
     <div class="table-scroll">
       <table class="sheet-table">
