@@ -467,6 +467,8 @@ const THEME_MAP = {
   AVGO: "AI基建/半導體",
   IBM: "AI基建/半導體",
   NBIL: "AI基建/半導體",
+  VRT: "AI基建/半導體",
+  ALGM: "AI基建/半導體",
   NET: "資安/軟體",
   PLTR: "資安/軟體",
   MSFL: "資安/軟體",
@@ -475,16 +477,21 @@ const THEME_MAP = {
   ASTS: "國防太空",
   RKLB: "國防太空",
   VOYG: "國防太空",
+  MRCY: "國防太空",
   MP: "稀土關鍵金屬",
   NU: "金融科技",
+  HOOD: "金融科技",
   VPG: "機器人",
   BHE: "機器人",
+  BMNR: "加密貨幣",
   XOM: "其他-能源/石油",
   CRGY: "其他-能源/石油",
   HAL: "其他-能源/石油",
   GSK: "其他-醫療保健",
   FVRR: "其他-消費網路",
-  UGL: "其他-貴金屬避險"
+  UGL: "其他-貴金屬避險",
+  B: "其他-貴金屬避險",
+  CAG: "其他-民生消費"
 };
 
 const THEME_COLORS = [
