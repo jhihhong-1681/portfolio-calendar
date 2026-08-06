@@ -176,5 +176,12 @@ window.INDEX_HISTORY = [
     sp500: 1.79,    // S&P 500（Yahoo Finance收盤7,736.52 與 WebSearch +1.79% 交叉比對成功）
     nasdaq: 2.59,   // 那斯達克綜合指數（Yahoo Finance收盤26,584.99 與 WebSearch +2.59% 交叉比對成功）
     sox: 6.55       // 費城半導體指數（finance.yahoo.com僅有delayed盤中數字不可用，改用investing.com收盤12,179.3；次要來源WebSearch +6.18%與此差0.37pp比對失敗，採用investing.com數字）
+  },
+  {
+    date: "2026-08-05",
+    taiex: 2.88,    // 台股加權指數（tw.stock.yahoo.com收盤44,611.60 與 WebSearch +2.88% 交叉比對成功）
+    sp500: -0.17,   // S&P 500（Yahoo Finance收盤7,723.55 與 WebSearch -0.05%~-0.2% 區間交叉比對成功）
+    nasdaq: -0.83,  // 那斯達克綜合指數（Yahoo Finance收盤26,363.44 與 WebSearch另一數字-0.8%交叉比對成功）
+    sox: -1.40      // 費城半導體指數（finance.yahoo.com連續503無法取得，改用investing.com收盤12,008.9；次要來源WebSearch查無可比對收盤數字，採用investing.com數字）
   }
 ];
