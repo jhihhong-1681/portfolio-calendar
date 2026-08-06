@@ -6,29 +6,12 @@ body {
   background: #f8f9fa;
   font-family: "Microsoft JhengHei", "PingFang TC", -apple-system, sans-serif;
   color: #202124;
+}
+
+.main-area {
   padding: 20px 16px 60px;
+  background: #f8f9fa;
 }
-
-.site-nav {
-  max-width: 1400px;
-  margin: 0 auto 16px;
-  display: flex;
-  gap: 8px;
-}
-
-.nav-link {
-  color: #5f6368;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
-  background: #fff;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
-  padding: 8px 14px;
-}
-
-.nav-link:hover { color: #202124; }
-.nav-link.active { color: #1a73e8; border-color: #1a73e8; }
 
 .sheet-wrap {
   max-width: 1400px;

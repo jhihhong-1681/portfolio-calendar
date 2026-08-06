@@ -10,14 +10,19 @@
 <script>
   // 每次都用當下時間戳當版本號，強迫瀏覽器每次都重新抓最新的 CSS/JS，
   // 這樣排程任務每天更新完資料後，打開網站就一定是最新的，不用手動清快取。
+  document.write('<link rel="stylesheet" href="sidebar.css?v=' + Date.now() + '">');
   document.write('<link rel="stylesheet" href="style.css?v=' + Date.now() + '">');
 </script>
 </head>
 <body>
-  <div class="site-nav">
-    <a href="index.html" class="nav-link active">📅 報酬日曆</a>
-    <a href="holdings-editor.html" class="nav-link">📊 持股更新</a>
-  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-title">📈 阿紘的投資站</div>
+      <a href="index.html" class="sidebar-item active">📅 報酬日曆</a>
+      <a href="holdings-editor.html" class="sidebar-item">📊 持股更新</a>
+      <a href="networth.html" class="sidebar-item">💰 資產淨值</a>
+    </nav>
+    <div class="main-area">
   <div class="page">
     <div class="card calendar-card">
       <div class="title-row">
@@ -86,6 +91,8 @@
       <div class="holdings-list" id="holdingsList"></div>
 
       <div class="footer" id="holdingsFooter"></div>
+    </div>
+  </div>
     </div>
   </div>
 

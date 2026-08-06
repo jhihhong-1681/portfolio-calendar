@@ -8,15 +8,19 @@
 <meta http-equiv="Expires" content="0">
 <title>持股更新</title>
 <script>
+  document.write('<link rel="stylesheet" href="sidebar.css?v=' + Date.now() + '">');
   document.write('<link rel="stylesheet" href="holdings-editor.css?v=' + Date.now() + '">');
 </script>
 </head>
 <body>
-  <div class="site-nav">
-    <a href="index.html" class="nav-link">📅 報酬日曆</a>
-    <a href="holdings-editor.html" class="nav-link active">📊 持股更新</a>
-  </div>
-
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-title">📈 阿紘的投資站</div>
+      <a href="index.html" class="sidebar-item">📅 報酬日曆</a>
+      <a href="holdings-editor.html" class="sidebar-item active">📊 持股更新</a>
+      <a href="networth.html" class="sidebar-item">💰 資產淨值</a>
+    </nav>
+    <div class="main-area">
   <div class="sheet-wrap">
     <div class="sheet-header">
       <h1>持股更新</h1>
@@ -55,6 +59,8 @@
     <button class="add-row-btn" id="addRowBtn" type="button" style="display:none;">＋ 新增一列</button>
 
     <div class="sheet-footer" id="sheetFooter"></div>
+  </div>
+    </div>
   </div>
 
   <script type="module" src="holdings-editor.js"></script>

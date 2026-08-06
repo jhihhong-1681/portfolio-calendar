@@ -13,3 +13,4 @@ export const FIREBASE_CONFIG = {
 export const OWNER_EMAIL = "jhihhong0810@gmail.com";
 
 export const PORTFOLIO_DOC_PATH = ["portfolio", "current"];
+export const NETWORTH_DOC_PATH = ["networth", "history"];
