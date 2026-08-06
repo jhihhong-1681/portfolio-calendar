@@ -667,10 +667,14 @@ function renderHoldings() {
     </div>
   `;
 
-  renderThemeExposure(h.positions || []);
-  renderOptionExpiry(h.positions || []);
+  // 目前持股面板只顯示還持有的部位；已平倉的歷史交易只在「持股更新」頁面看得到，
+  // 但它們的已實現損益已經算進上面的 totals.realizedPL 裡了。
+  const openPositions = (h.positions || []).filter((p) => !p.closed);
 
-  const positions = h.positions || [];
+  renderThemeExposure(openPositions);
+  renderOptionExpiry(openPositions);
+
+  const positions = openPositions;
   holdingsListEl.innerHTML = positions
     .map((p) => {
       const borderCls = p.pl > 0 ? "gain-border" : p.pl < 0 ? "loss-border" : "";

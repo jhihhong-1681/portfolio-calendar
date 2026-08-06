@@ -21,7 +21,7 @@
         <button class="auth-btn" id="authBtn" type="button">登入編輯</button>
       </div>
     </div>
-    <div class="sheet-note">美股的「總投入」「現值」是公式（股數 × 成本均價／現價 × 匯率），跟原本 Sheet 一樣不能直接改；期權沒有這個公式（Sheet 裡本來就是手動填的），維持直接編輯。</div>
+    <div class="sheet-note">美股的「總投入」「現值」是公式（股數 × 成本均價／現價 × 匯率），跟原本 Sheet 一樣不能直接改；期權沒有這個公式（Sheet 裡本來就是手動填的），維持直接編輯。勾選「已平倉」的部位（賣光了的舊部位）不算總投入/現值，只留已實現損益當歷史紀錄。</div>
 
     <div class="table-scroll">
       <table class="sheet-table">
@@ -41,6 +41,7 @@
             <th>報酬率</th>
             <th>平倉</th>
             <th>已實現損益</th>
+            <th>已平倉</th>
             <th></th>
           </tr>
         </thead>
@@ -49,7 +50,10 @@
       </table>
     </div>
 
-    <button class="add-row-btn" id="addRowBtn" type="button" style="display:none;">＋ 新增一列</button>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="add-row-btn" id="addRowBtn" type="button" style="display:none;">＋ 新增一列</button>
+      <button class="add-row-btn" id="importClosedBtn" type="button" style="display:none;">📥 匯入 Sheet 已平倉紀錄（70 筆，僅需一次）</button>
+    </div>
 
     <div class="sheet-footer" id="sheetFooter"></div>
   </div>
