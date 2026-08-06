@@ -14,6 +14,10 @@
 </script>
 </head>
 <body>
+  <div class="site-nav">
+    <a href="index.html" class="nav-link active">📅 報酬日曆</a>
+    <a href="holdings-editor.html" class="nav-link">📊 持股更新</a>
+  </div>
   <div class="page">
     <div class="card calendar-card">
       <div class="title-row">
@@ -65,11 +69,6 @@
       <div class="title-row">
         <span class="title-icon">📊</span>
         <span class="title-text">目前持股</span>
-        <div class="auth-row">
-          <span class="auth-status" id="authStatus">連線中…</span>
-          <button class="sync-btn" id="syncBtn" style="display:none;" type="button">同步目前資料到雲端</button>
-          <button class="auth-btn" id="authBtn" type="button">登入編輯</button>
-        </div>
       </div>
 
       <div class="holdings-summary" id="holdingsSummary"></div>

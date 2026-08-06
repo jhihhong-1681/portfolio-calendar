@@ -3,8 +3,6 @@
 body {
   margin: 0;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
   background: #0d1117;
   font-family: "Microsoft JhengHei", "PingFang TC", -apple-system, sans-serif;
   color: #e6e6e6;
@@ -14,6 +12,7 @@ body {
 .page {
   width: 100%;
   max-width: 1180px;
+  margin: 0 auto;
   display: flex;
   align-items: flex-start;
   gap: 24px;
@@ -55,34 +54,28 @@ body {
   margin-bottom: 20px;
 }
 
-.auth-row {
-  margin-left: auto;
+.site-nav {
+  width: 100%;
+  max-width: 1180px;
   display: flex;
-  align-items: center;
   gap: 8px;
-  font-size: 11px;
-  font-weight: 400;
+  margin: 0 auto 16px;
+  padding: 0 16px;
 }
 
-.auth-status {
+.nav-link {
   color: #8a8f98;
-  white-space: nowrap;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  background: #14181f;
+  border: 1px solid #232833;
+  border-radius: 8px;
+  padding: 8px 14px;
 }
 
-.auth-btn, .sync-btn {
-  background: #232833;
-  color: #cfd3d8;
-  border: 1px solid #33394a;
-  border-radius: 6px;
-  padding: 5px 9px;
-  font-size: 11px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.auth-btn:hover, .sync-btn:hover { background: #2e3542; }
-
-.sync-btn { color: #7ee787; border-color: #2fbf6a; }
+.nav-link:hover { color: #cfd3d8; }
+.nav-link.active { color: #e6e6e6; border-color: #4da3ff; }
 
 .month-row {
   display: flex;
@@ -542,88 +535,3 @@ body {
   color: #8a8f98;
   margin-top: 3px;
 }
-
-/* ---- 編輯模式 ---- */
-
-.edit-input {
-  background: #0d1117;
-  border: 1px solid #33394a;
-  border-radius: 4px;
-  color: #e6e6e6;
-  font-family: inherit;
-  font-size: 11px;
-  padding: 3px 5px;
-}
-
-.edit-input:focus {
-  outline: none;
-  border-color: #4da3ff;
-}
-
-.holdings-summary .edit-input {
-  width: 100%;
-  font-size: 15px;
-  font-weight: 700;
-  padding: 4px 6px;
-}
-
-.holding-row.editing {
-  border-left-color: #4da3ff;
-}
-
-.edit-symbol {
-  width: 56px;
-  font-weight: 700;
-}
-
-.edit-shares {
-  width: 56px;
-}
-
-.edit-name {
-  width: 100%;
-  margin-top: 4px;
-  color: #9aa0a8;
-}
-
-.edit-line2 {
-  justify-content: flex-start;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.edit-small {
-  width: 64px;
-}
-
-.edit-line3 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.del-row-btn {
-  margin-left: auto;
-  background: transparent;
-  border: 1px solid #5c2626;
-  color: #ff8a8a;
-  border-radius: 4px;
-  padding: 2px 7px;
-  font-size: 10.5px;
-  cursor: pointer;
-}
-
-.del-row-btn:hover { background: rgba(255, 92, 92, 0.12); }
-
-.add-row-btn {
-  background: #1b2029;
-  border: 1px dashed #33394a;
-  color: #7ee787;
-  border-radius: 8px;
-  padding: 9px;
-  font-size: 12px;
-  cursor: pointer;
-  width: 100%;
-}
-
-.add-row-btn:hover { background: #232833; }
