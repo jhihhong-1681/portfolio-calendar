@@ -539,7 +539,7 @@ function renderThemeExposure(positions) {
             <span class="legend-dot" style="background:${color}"></span>${theme}
             <span class="theme-row-value">${fmtAmount(value).replace(/^[+-]/, "")}（${pct.toFixed(1)}%）</span>
           </div>
-          <div class="theme-row-symbols">${symbols}</div>
+          <div class="theme-row-symbols" style="color:${color}">${symbols}</div>
           <div class="theme-bar-track">
             <div class="theme-bar-fill" style="width:${pct.toFixed(2)}%;background:${color};"></div>
           </div>
