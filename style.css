@@ -649,7 +649,7 @@ body {
 
 .donut-body {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 28px;
   flex-wrap: wrap;
 }
@@ -657,6 +657,7 @@ body {
 .donut-chart-wrap {
   flex: none;
   width: 190px;
+  margin-top: 6px;
 }
 
 .donut-chart-wrap svg {
@@ -666,32 +667,45 @@ body {
 }
 
 .donut-legend {
-  flex: 1 1 220px;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex: 1 1 380px;
+  min-width: 240px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 9px 18px;
+  align-content: start;
 }
 
 .donut-legend-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 13.5px;
+  gap: 7px;
+  font-size: 13px;
+  min-width: 0;
 }
 
 .donut-legend-label {
   color: #cfd3d8;
-  flex: 1;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .donut-legend-value {
   font-weight: 700;
   color: #e6e6e6;
   flex: none;
+  margin-left: 6px;
+}
+
+.donut-legend-divider {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: #6b7078;
+  border-top: 1px solid #232833;
+  padding-top: 9px;
+  margin-top: 3px;
 }
 
 .ytd-title-row {

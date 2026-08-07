@@ -542,7 +542,7 @@ function renderDonutChart() {
   }
 
   const sorted = [...positions].sort((a, b) => b.value - a.value);
-  const TOP_N = 7;
+  const TOP_N = 7; // 甜甜圈本身只有畫面能承受的色塊數，超過這個數的部位彙總成一段灰色「其他」
   const top = sorted.slice(0, TOP_N);
   const rest = sorted.slice(TOP_N);
   const restValue = rest.reduce((s, p) => s + p.value, 0);
@@ -554,17 +554,14 @@ function renderDonutChart() {
     return;
   }
 
-  const slices = top.map((p, i) => ({
-    label: p.symbol,
+  const OTHER_COLOR = "#4a5162";
+
+  const chartSlices = top.map((p, i) => ({
     pct: (p.value / grandTotal) * 100,
     color: THEME_COLORS[i % THEME_COLORS.length]
   }));
   if (restValue > 0) {
-    slices.push({
-      label: `其他（${rest.length} 筆）`,
-      pct: (restValue / grandTotal) * 100,
-      color: "#4a5162"
-    });
+    chartSlices.push({ pct: (restValue / grandTotal) * 100, color: OTHER_COLOR });
   }
 
   const size = 200;
@@ -573,13 +570,13 @@ function renderDonutChart() {
   const r = 76;
   const strokeWidth = 32;
   const circumference = 2 * Math.PI * r;
-  const gapDeg = slices.length > 1 ? 1.4 : 0; // 每段之間留一點視覺間隙，避免色塊糊在一起
+  const gapDeg = chartSlices.length > 1 ? 1.4 : 0; // 每段之間留一點視覺間隙，避免色塊糊在一起
 
   let offset = 0;
   let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
   svg += `<g transform="rotate(-90 ${cx} ${cy})">`;
   svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1b2029" stroke-width="${strokeWidth}" />`;
-  for (const s of slices) {
+  for (const s of chartSlices) {
     const gap = (gapDeg / 360) * circumference;
     const len = Math.max((s.pct / 100) * circumference - gap, 0);
     svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${len.toFixed(2)} ${(circumference - len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" />`;
@@ -591,17 +588,26 @@ function renderDonutChart() {
   svg += `</svg>`;
   donutChartEl.innerHTML = svg;
 
-  donutLegendEl.innerHTML = slices
-    .map(
-      (s) => `
-        <div class="donut-legend-row">
-          <span class="legend-dot" style="background:${s.color}"></span>
-          <span class="donut-legend-label">${s.label}</span>
-          <span class="donut-legend-value">${s.pct.toFixed(1)}%</span>
-        </div>
-      `
-    )
+  // 圖例列出「每一檔」持股（不再彙總），前 N 大沿用甜甜圈上的色塊顏色，
+  // 其餘部位在圖上被併成一段灰色「其他」，圖例裡則統一用同一個灰點標示，方便對照。
+  const legendRow = (label, pct, color) => `
+    <div class="donut-legend-row">
+      <span class="legend-dot" style="background:${color}"></span>
+      <span class="donut-legend-label">${label}</span>
+      <span class="donut-legend-value">${pct.toFixed(1)}%</span>
+    </div>
+  `;
+
+  let legendHtml = top
+    .map((p, i) => legendRow(p.symbol, (p.value / grandTotal) * 100, THEME_COLORS[i % THEME_COLORS.length]))
     .join("");
+
+  if (rest.length) {
+    legendHtml += `<div class="donut-legend-divider">其他持股（${rest.length} 檔，甜甜圈圖中歸為同一色）</div>`;
+    legendHtml += rest.map((p) => legendRow(p.symbol, (p.value / grandTotal) * 100, OTHER_COLOR)).join("");
+  }
+
+  donutLegendEl.innerHTML = legendHtml;
 }
 
 const ytdChartEl = document.getElementById("ytdChart");
