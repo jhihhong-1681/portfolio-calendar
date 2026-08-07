@@ -25,6 +25,11 @@ body {
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 
+.hero-card {
+  flex: 1 1 100%;
+  padding: 26px 28px 30px;
+}
+
 .calendar-card {
   flex: 2 1 640px;
   min-width: 520px;
@@ -512,4 +517,237 @@ body {
   font-size: 10.5px;
   color: #8a8f98;
   margin-top: 3px;
+}
+
+/* ---- Hero 摘要卡 ---- */
+
+.hero-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 18px;
+}
+
+.hero-date {
+  font-size: 12.5px;
+  color: #8a8f98;
+  letter-spacing: 0.5px;
+}
+
+.hero-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #e6e6e6;
+}
+
+.networth-block {
+  background: #171c26;
+  border: 1px solid #232833;
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+
+.networth-label {
+  font-size: 13px;
+  color: #cfd3d8;
+  font-weight: 700;
+}
+
+.networth-label-en {
+  font-size: 10.5px;
+  color: #6b7078;
+  letter-spacing: 1px;
+  margin-top: 1px;
+}
+
+.networth-value-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 12px;
+}
+
+.networth-value {
+  font-size: 42px;
+  font-weight: 800;
+  color: #f2f3f5;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.networth-breakdown {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+.breakdown-label {
+  font-size: 11.5px;
+  color: #8a8f98;
+  margin-bottom: 3px;
+}
+
+.breakdown-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stat-tile-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-tile {
+  background: #171c26;
+  border: 1px solid #232833;
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 12.5px;
+  color: #9aa0a8;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.stat-sub {
+  font-size: 10.5px;
+  color: #6b7078;
+  margin-top: 6px;
+  letter-spacing: 0.3px;
+}
+
+.stat-blue { color: #4da3ff; }
+.stat-yellow { color: #f5c518; }
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #cfd3d8;
+  margin-bottom: 14px;
+}
+
+.donut-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #232833;
+}
+
+.donut-body {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.donut-chart-wrap {
+  flex: none;
+  width: 190px;
+}
+
+.donut-chart-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.donut-legend {
+  flex: 1 1 220px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.donut-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+}
+
+.donut-legend-label {
+  color: #cfd3d8;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.donut-legend-value {
+  font-weight: 700;
+  color: #e6e6e6;
+  flex: none;
+}
+
+.ytd-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.ytd-badge {
+  font-size: 11.5px;
+  color: #9aa0a8;
+  background: #1b2029;
+  border: 1px solid #232833;
+  border-radius: 999px;
+  padding: 4px 12px;
+  flex: none;
+}
+
+#ytdChart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ytd-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ytd-stat {
+  text-align: left;
+}
+
+.ytd-stat-label {
+  font-size: 11.5px;
+  color: #8a8f98;
+  margin-bottom: 4px;
+}
+
+.ytd-stat-value {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .stat-tile-row, .ytd-stats-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .networth-value {
+    font-size: 32px;
+  }
+  .donut-body {
+    gap: 18px;
+  }
 }

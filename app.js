@@ -455,6 +455,287 @@ function renderCompareChart(year, month) {
   );
 }
 
+// ---- Hero 摘要卡：淨資產大數字 + MoM/YTD/現金水位 + 持股分佈甜甜圈圖 + YTD 走勢圖 ----
+
+// 從 dailyMap 依日期區間(含頭尾)複利串起每天的漲跌幅，算出區間累積報酬%。
+// 遇到 basis 變更或資料缺漏的那天 pct 是 null，直接跳過不計入(累積值維持不變)，
+// 跟 compareChart 的邏輯一致：不硬把不同基準的區間橋接在一起。
+function computeCumulativeReturn(fromDate, toDate) {
+  let cum = 1;
+  let count = 0;
+  const sortedDates = [...dailyMap.keys()].sort();
+  for (const date of sortedDates) {
+    if (date < fromDate || date > toDate) continue;
+    const info = dailyMap.get(date);
+    if (info.pct !== null && info.pct !== undefined) {
+      cum *= 1 + info.pct / 100;
+      count++;
+    }
+  }
+  return { pct: (cum - 1) * 100, count };
+}
+
+function computeMonthReturn(year, month) {
+  const from = `${year}-${pad2(month)}-01`;
+  const to = `${year}-${pad2(month)}-31`;
+  return computeCumulativeReturn(from, to);
+}
+
+const heroDateEl = document.getElementById("heroDate");
+const heroTotalAssetsEl = document.getElementById("heroTotalAssets");
+const heroUnrealizedEl = document.getElementById("heroUnrealized");
+const heroRealizedEl = document.getElementById("heroRealized");
+const statMomEl = document.getElementById("statMom");
+const statYtdEl = document.getElementById("statYtd");
+const statCashEl = document.getElementById("statCash");
+
+function gainLossClass(n) {
+  return n > 0 ? "gain" : n < 0 ? "loss" : "flat";
+}
+
+function renderHeroSummary() {
+  const today = new Date();
+  heroDateEl.textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+
+  if (rawHistory.length === 0) {
+    heroTotalAssetsEl.textContent = "尚無資料";
+    return;
+  }
+
+  const last = rawHistory[rawHistory.length - 1];
+  heroTotalAssetsEl.textContent = fmtAmount(last.total).replace(/^[+-]/, "");
+
+  const h = window.HOLDINGS;
+  const t = (h && h.totals) || {};
+  heroUnrealizedEl.textContent = fmtAmount(t.unrealizedPL);
+  heroUnrealizedEl.className = "breakdown-value " + gainLossClass(t.unrealizedPL);
+  heroRealizedEl.textContent = fmtAmount(t.realizedPL);
+  heroRealizedEl.className = "breakdown-value " + gainLossClass(t.realizedPL);
+
+  const [ly, lm] = last.date.split("-").map(Number);
+
+  const mom = computeMonthReturn(ly, lm);
+  statMomEl.textContent = mom.count ? fmtPct(mom.pct) : "--";
+  statMomEl.className = "stat-value " + (mom.count ? gainLossClass(mom.pct) : "flat");
+
+  const ytd = computeCumulativeReturn(`${ly}-01-01`, last.date);
+  statYtdEl.textContent = ytd.count ? fmtPct(ytd.pct) : "--";
+  statYtdEl.className = "stat-value " + (ytd.count ? gainLossClass(ytd.pct) : "flat");
+
+  const cashRatio = t.totalAssets ? (t.cash / t.totalAssets) * 100 : null;
+  statCashEl.textContent = cashRatio !== null ? cashRatio.toFixed(1) + "%" : "--";
+  statCashEl.className = "stat-value flat";
+}
+
+const donutChartEl = document.getElementById("donutChart");
+const donutLegendEl = document.getElementById("donutLegend");
+
+// 持股現值由大到小排序，取前 7 筆各畫一段甜甜圈，其餘併成「其他」，
+// 顏色沿用 THEME_COLORS（跟主題曝險那組色票一致，整站配色統一）。
+function renderDonutChart() {
+  const h = window.HOLDINGS;
+  const positions = ((h && h.positions) || []).filter((p) => !p.closed && p.value);
+  if (!positions.length) {
+    donutChartEl.innerHTML = "";
+    donutLegendEl.innerHTML = '<div class="flat" style="font-size:12px;">尚無持股資料</div>';
+    return;
+  }
+
+  const sorted = [...positions].sort((a, b) => b.value - a.value);
+  const TOP_N = 7;
+  const top = sorted.slice(0, TOP_N);
+  const rest = sorted.slice(TOP_N);
+  const restValue = rest.reduce((s, p) => s + p.value, 0);
+  const grandTotal = sorted.reduce((s, p) => s + p.value, 0);
+
+  if (grandTotal <= 0) {
+    donutChartEl.innerHTML = "";
+    donutLegendEl.innerHTML = "";
+    return;
+  }
+
+  const slices = top.map((p, i) => ({
+    label: p.symbol,
+    pct: (p.value / grandTotal) * 100,
+    color: THEME_COLORS[i % THEME_COLORS.length]
+  }));
+  if (restValue > 0) {
+    slices.push({
+      label: `其他（${rest.length} 筆）`,
+      pct: (restValue / grandTotal) * 100,
+      color: "#4a5162"
+    });
+  }
+
+  const size = 200;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 76;
+  const strokeWidth = 32;
+  const circumference = 2 * Math.PI * r;
+  const gapDeg = slices.length > 1 ? 1.4 : 0; // 每段之間留一點視覺間隙，避免色塊糊在一起
+
+  let offset = 0;
+  let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<g transform="rotate(-90 ${cx} ${cy})">`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1b2029" stroke-width="${strokeWidth}" />`;
+  for (const s of slices) {
+    const gap = (gapDeg / 360) * circumference;
+    const len = Math.max((s.pct / 100) * circumference - gap, 0);
+    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${len.toFixed(2)} ${(circumference - len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" />`;
+    offset += (s.pct / 100) * circumference;
+  }
+  svg += `</g>`;
+  svg += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="12" fill="#8a8f98">持股現值</text>`;
+  svg += `<text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="15" font-weight="700" fill="#e6e6e6">${fmtAmount(grandTotal).replace(/^[+-]/, "")}</text>`;
+  svg += `</svg>`;
+  donutChartEl.innerHTML = svg;
+
+  donutLegendEl.innerHTML = slices
+    .map(
+      (s) => `
+        <div class="donut-legend-row">
+          <span class="legend-dot" style="background:${s.color}"></span>
+          <span class="donut-legend-label">${s.label}</span>
+          <span class="donut-legend-value">${s.pct.toFixed(1)}%</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+const ytdChartEl = document.getElementById("ytdChart");
+const ytdChartWrapEl = document.getElementById("ytdChartWrap");
+const ytdTooltipEl = document.getElementById("ytdTooltip");
+const ytdStatsRowEl = document.getElementById("ytdStatsRow");
+const ytdYearBadgeEl = document.getElementById("ytdYearBadge");
+
+// 今年以來每個有資料的交易日，複利累加成「今年累積報酬%」走勢圖（面積圖 + 格線 + hover）。
+function renderYtdChart() {
+  if (rawHistory.length === 0) {
+    ytdChartEl.innerHTML = '<div class="flat" style="font-size:12px;padding:10px 0;">尚無資料</div>';
+    ytdStatsRowEl.innerHTML = "";
+    return;
+  }
+
+  const last = rawHistory[rawHistory.length - 1];
+  const [year] = last.date.split("-").map(Number);
+  ytdYearBadgeEl.textContent = `${year} 年至今`;
+
+  const yearDates = [...dailyMap.keys()].filter((d) => d.startsWith(String(year))).sort();
+  if (yearDates.length === 0) {
+    ytdChartEl.innerHTML = '<div class="flat" style="font-size:12px;padding:10px 0;">今年尚無資料</div>';
+    ytdStatsRowEl.innerHTML = "";
+    return;
+  }
+
+  let cum = 1;
+  const series = [];
+  for (const d of yearDates) {
+    const info = dailyMap.get(d);
+    if (info.pct !== null && info.pct !== undefined) cum *= 1 + info.pct / 100;
+    series.push({ date: d, pct: (cum - 1) * 100 });
+  }
+
+  const width = 640;
+  const height = 190;
+  const padL = 38;
+  const padR = 8;
+  const padT = 14;
+  const padBottom = 10;
+
+  const values = series.map((s) => s.pct);
+  let min = Math.min(0, ...values);
+  let max = Math.max(0, ...values);
+  if (min === max) {
+    min -= 1;
+    max += 1;
+  }
+  const spread = max - min;
+  min -= spread * 0.08;
+  max += spread * 0.08;
+
+  const n = series.length;
+  const xFor = (i) => (n === 1 ? padL : padL + (i / (n - 1)) * (width - padL - padR));
+  const yFor = (v) => padT + (1 - (v - min) / (max - min)) * (height - padT - padBottom);
+
+  const zeroY = yFor(0);
+  const points = series.map((s, i) => `${xFor(i).toFixed(1)},${yFor(s.pct).toFixed(1)}`).join(" ");
+  const areaPoints = `${xFor(0).toFixed(1)},${zeroY.toFixed(1)} ${points} ${xFor(n - 1).toFixed(1)},${zeroY.toFixed(1)}`;
+
+  const lastPct = values[n - 1];
+  // 台股慣例：紅 = 賺錢(正), 綠 = 賠錢(負)，跟其他圖表統一
+  const lineColor = lastPct >= 0 ? "#ff5c5c" : "#2fbf6a";
+
+  let gridSvg = "";
+  const gridCount = 4;
+  for (let i = 0; i <= gridCount; i++) {
+    const v = min + ((max - min) * i) / gridCount;
+    const y = yFor(v).toFixed(1);
+    gridSvg += `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="#1e2430" stroke-width="1" />`;
+    gridSvg += `<text x="${(padL - 8).toFixed(1)}" y="${(parseFloat(y) + 3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#6b7078">${v > 0 ? "+" : ""}${v.toFixed(0)}%</text>`;
+  }
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<defs><linearGradient id="ytdGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.32" />
+    <stop offset="100%" stop-color="${lineColor}" stop-opacity="0" />
+  </linearGradient></defs>`;
+  svg += gridSvg;
+  svg += `<line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${width - padR}" y2="${zeroY.toFixed(1)}" stroke="#3a3f4a" stroke-width="1" stroke-dasharray="3,3" />`;
+  svg += `<polygon points="${areaPoints}" fill="url(#ytdGrad)" />`;
+  svg += `<polyline points="${points}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />`;
+  svg += `<circle cx="${xFor(n - 1).toFixed(1)}" cy="${yFor(lastPct).toFixed(1)}" r="4" fill="${lineColor}" stroke="#0d1117" stroke-width="1.5"/>`;
+  svg += `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent" class="hover-capture" style="cursor:crosshair;" />`;
+  svg += `<g class="hover-guide" opacity="0" style="pointer-events:none;">`;
+  svg += `<line class="hg-line" x1="0" y1="${padT}" x2="0" y2="${height - padBottom}" stroke="#8a8f98" stroke-width="1" stroke-dasharray="2,2" />`;
+  svg += `<circle class="hg-dot" r="4" fill="${lineColor}" stroke="#0d1117" stroke-width="1.5" />`;
+  svg += `</g>`;
+  svg += `</svg>`;
+
+  ytdChartEl.innerHTML = svg;
+
+  const trackedDays = Math.round((new Date(yearDates[yearDates.length - 1]) - new Date(yearDates[0])) / 86400000) + 1;
+  ytdStatsRowEl.innerHTML = `
+    <div class="ytd-stat">
+      <div class="ytd-stat-label">YTD 增幅</div>
+      <div class="ytd-stat-value ${gainLossClass(lastPct)}">${fmtPct(lastPct)}</div>
+    </div>
+    <div class="ytd-stat">
+      <div class="ytd-stat-label">資料點數</div>
+      <div class="ytd-stat-value stat-blue">${n}</div>
+    </div>
+    <div class="ytd-stat">
+      <div class="ytd-stat-label">追蹤天數</div>
+      <div class="ytd-stat-value stat-yellow">${trackedDays}</div>
+    </div>
+  `;
+
+  const svgEl = ytdChartEl.querySelector("svg");
+  const hoverGuide = svgEl.querySelector(".hover-guide");
+  const hgLine = svgEl.querySelector(".hg-line");
+  const hgDot = svgEl.querySelector(".hg-dot");
+  setupChartHover(
+    svgEl,
+    ytdChartWrapEl,
+    ytdTooltipEl,
+    { width, height, padL, padR },
+    n,
+    (idx) => {
+      hoverGuide.setAttribute("opacity", "1");
+      const x = xFor(idx).toFixed(1);
+      hgLine.setAttribute("x1", x);
+      hgLine.setAttribute("x2", x);
+      hgDot.setAttribute("cx", x);
+      hgDot.setAttribute("cy", yFor(series[idx].pct).toFixed(1));
+    },
+    (idx) => {
+      const s = series[idx];
+      return `<div class="tt-date">${s.date}</div><div class="tt-row"><span class="tt-dot" style="background:${lineColor}"></span><span class="tt-value ${gainLossClass(s.pct)}">${fmtPct(s.pct)}</span></div>`;
+    }
+  );
+}
+
 const holdingsSummaryEl = document.getElementById("holdingsSummary");
 const themeExposureEl = document.getElementById("themeExposure");
 const expiryListEl = document.getElementById("expiryList");
@@ -631,6 +912,8 @@ function renderHoldings() {
     holdingsSummaryEl.innerHTML = "";
     holdingsListEl.innerHTML = '<div class="flat" style="font-size:12px;">尚無持股資料</div>';
     holdingsFooterEl.textContent = "";
+    renderHeroSummary();
+    renderDonutChart();
     return;
   }
 
@@ -708,12 +991,16 @@ function renderHoldings() {
     .join("");
 
   holdingsFooterEl.textContent = `快照時間：${h.asOf}`;
+
+  renderHeroSummary();
+  renderDonutChart();
 }
 
 // 暴露給 firebase-sync.js：雲端資料一有更新（例如在「持股更新」頁面改了東西），
 // 這裡就會被叫到，重新畫這個唯讀面板，不用重新整理頁面。
 window.renderHoldings = renderHoldings;
 renderHoldings();
+renderYtdChart();
 
 document.getElementById("prevBtn").addEventListener("click", () => {
   viewMonth -= 1;
